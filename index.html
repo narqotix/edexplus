@@ -80,7 +80,7 @@
             <div class="bg-white px-3 py-1.5 neo-border font-bold text-xs">
                 <span id="nav-user-role" class="bg-neoCyan px-2 py-0.5 neo-border mr-2 uppercase">Student</span>
                 <span id="nav-user-name">User</span> 
-                <span id="nav-user-id" class="text-xs text-slate-600 ml-1 font-mono"></span>
+                <span id="nav-user-id" class="text-xs text-slate-600 ml-1 font-mono">()</span>
             </div>
             <button onclick="logoutUser()" class="neo-btn bg-neoOrange px-3 py-1.5 font-bold text-xs uppercase flex items-center gap-1">
                 <i class="fa-solid fa-right-from-bracket"></i> Logout
@@ -105,19 +105,19 @@
 
                 <!-- Role Selector Tabs -->
                 <div class="grid grid-cols-5 gap-1 mb-6 text-center">
-                    <button id="btn-tab-student" onclick="setAuthRole('student')" class="neo-btn bg-neoCyan py-2 text-[11px] font-black uppercase">
+                    <button id="btn-tab-student" type="button" onclick="setAuthRole('student')" class="neo-btn bg-neoCyan py-2 text-[11px] font-black uppercase">
                         👨‍🎓 Student
                     </button>
-                    <button id="btn-tab-teacher" onclick="setAuthRole('teacher')" class="neo-btn bg-white py-2 text-[11px] font-black uppercase">
+                    <button id="btn-tab-teacher" type="button" onclick="setAuthRole('teacher')" class="neo-btn bg-white py-2 text-[11px] font-black uppercase">
                         👩‍🏫 Teacher
                     </button>
-                    <button id="btn-tab-hod" onclick="setAuthRole('hod')" class="neo-btn bg-white py-2 text-[11px] font-black uppercase">
+                    <button id="btn-tab-hod" type="button" onclick="setAuthRole('hod')" class="neo-btn bg-white py-2 text-[11px] font-black uppercase">
                         🏛️ HOD
                     </button>
-                    <button id="btn-tab-tpo" onclick="setAuthRole('tpo')" class="neo-btn bg-white py-2 text-[11px] font-black uppercase">
+                    <button id="btn-tab-tpo" type="button" onclick="setAuthRole('tpo')" class="neo-btn bg-white py-2 text-[11px] font-black uppercase">
                         💼 TPO
                     </button>
-                    <button id="btn-tab-admin" onclick="setAuthRole('admin')" class="neo-btn bg-white py-2 text-[11px] font-black uppercase">
+                    <button id="btn-tab-admin" type="button" onclick="setAuthRole('admin')" class="neo-btn bg-white py-2 text-[11px] font-black uppercase">
                         ⚙️ Admin
                     </button>
                 </div>
@@ -125,8 +125,8 @@
                 <!-- LOGIN FORM -->
                 <form id="form-login" onsubmit="handleAuthLogin(event)" class="space-y-4">
                     <div>
-                        <label class="block font-bold text-xs uppercase mb-1" id="label-email">Email ID</label>
-                        <input type="email" id="auth-email" required placeholder="Enter Email Address" 
+                        <label class="block font-bold text-xs uppercase mb-1" id="label-email">Student DKTE Email ID</label>
+                        <input type="email" id="auth-email" required placeholder="Enter Email" 
                             class="w-full bg-slate-50 neo-border p-3 font-bold text-sm focus:outline-none focus:bg-neoYellow/20">
                         <p id="auth-email-hint" class="text-[11px] font-bold text-neoOrange mt-1">
                             ⚠️ Student format: 24UADxxx@dkte.ac.in
@@ -173,7 +173,7 @@
                     </div>
                     <div>
                         <label class="block font-bold text-xs uppercase mb-1">Password</label>
-                        <input type="password" id="signup-password" required placeholder="Create Password" class="w-full bg-slate-50 neo-border p-2.5 font-bold text-sm">
+                        <input type="password" id="signup-password" required placeholder="Set Password" class="w-full bg-slate-50 neo-border p-2.5 font-bold text-sm">
                     </div>
                     <button type="submit" class="w-full neo-btn bg-neoCyan py-3 font-heading text-xs font-black uppercase">
                         Complete Student Signup
@@ -188,26 +188,25 @@
         </section>
 
         <!-- ========================================== -->
-        <!-- VIEW 2: SYSTEM ADMIN PANEL (`/admin`) -->
+        <!-- VIEW 2: SYSTEM ADMIN PANEL (/admin) -->
         <!-- ========================================== -->
         <section id="section-admin" class="hidden space-y-6">
             <div class="bg-neoYellow neo-border-lg p-5 shadow-neo-lg flex items-center justify-between">
                 <div>
                     <span class="badge-tag bg-white px-2 py-0.5 text-xs font-bold uppercase">System Control Unit</span>
                     <h2 class="font-heading font-black text-2xl mt-1">SYSTEM ADMIN PANEL</h2>
-                    <p class="font-bold text-xs">Manage & Edit HOD Credentials & TPO Access</p>
+                    <p class="font-bold text-xs">Manage HOD Credentials & TPO Access</p>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Add / Edit HOD Credentials -->
+                <!-- Add/Edit HOD Credentials -->
                 <div class="bg-white neo-border-lg p-5 shadow-neo-lg space-y-4">
-                    <h3 class="font-heading font-black text-base uppercase border-b-2 border-black pb-2 text-neoOrange flex justify-between items-center" id="admin-hod-form-title">
-                        <span><i class="fa-solid fa-user-gear"></i> Create HOD Credential</span>
-                        <button id="btn-cancel-hod-edit" type="button" onclick="cancelHodEdit()" class="hidden text-xs bg-neoRed text-white px-2 py-0.5 neo-border">Cancel Edit</button>
+                    <h3 class="font-heading font-black text-base uppercase border-b-2 border-black pb-2 text-neoOrange">
+                        <i class="fa-solid fa-user-gear"></i> Create / Edit HOD Credential
                     </h3>
                     <form onsubmit="handleSaveHOD(event)" class="space-y-3 text-xs font-bold">
-                        <input type="hidden" id="admin-hod-edit-index" value="-1">
+                        <input type="hidden" id="admin-hod-index" value="-1">
                         <div>
                             <label class="block mb-1">HOD Name</label>
                             <input type="text" id="admin-hod-name" required placeholder="e.g. Prof. T.I. Bagban" class="w-full neo-border p-2 bg-slate-50">
@@ -220,57 +219,75 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block mb-1">HOD Email ID (Any Domain)</label>
+                            <label class="block mb-1">HOD Email ID</label>
                             <input type="email" id="admin-hod-email" required placeholder="e.g. hod.aids@gmail.com" class="w-full neo-border p-2 bg-slate-50">
                         </div>
                         <div>
                             <label class="block mb-1">Password</label>
                             <input type="password" id="admin-hod-password" required placeholder="Set Password" class="w-full neo-border p-2 bg-slate-50">
                         </div>
-                        <button type="submit" id="btn-submit-hod" class="w-full neo-btn bg-neoGreen py-2 font-heading text-xs font-black uppercase">
+                        <button type="submit" id="btn-save-hod" class="w-full neo-btn bg-neoGreen py-2 font-heading text-xs font-black uppercase">
                             Register HOD Credential
                         </button>
                     </form>
 
-                    <!-- Registered HODs List -->
-                    <div class="border-t-2 border-black pt-3">
-                        <p class="font-heading font-black text-xs uppercase mb-2">Registered HODs</p>
-                        <div id="admin-hod-list" class="space-y-2">
-                            <p class="text-xs text-slate-500 italic">No HODs registered yet.</p>
+                    <!-- Active HOD List Table -->
+                    <div class="pt-4 border-t-2 border-black space-y-2">
+                        <h4 class="font-heading text-xs uppercase font-black">Registered HODs</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left neo-border text-xs font-bold">
+                                <thead class="bg-neoYellow border-b-2 border-black uppercase">
+                                    <tr>
+                                        <th class="p-1.5 border-r border-black">Name</th>
+                                        <th class="p-1.5 border-r border-black">Dept</th>
+                                        <th class="p-1.5 border-r border-black">Email</th>
+                                        <th class="p-1.5">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-admin-hods" class="divide-y divide-black"></tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
 
-                <!-- Add / Edit TPO Credentials -->
+                <!-- Add/Edit TPO Credentials -->
                 <div class="bg-white neo-border-lg p-5 shadow-neo-lg space-y-4">
-                    <h3 class="font-heading font-black text-base uppercase border-b-2 border-black pb-2 text-neoPurple flex justify-between items-center" id="admin-tpo-form-title">
-                        <span><i class="fa-solid fa-briefcase"></i> Create TPO Credential</span>
-                        <button id="btn-cancel-tpo-edit" type="button" onclick="cancelTpoEdit()" class="hidden text-xs bg-neoRed text-white px-2 py-0.5 neo-border">Cancel Edit</button>
+                    <h3 class="font-heading font-black text-base uppercase border-b-2 border-black pb-2 text-neoPurple">
+                        <i class="fa-solid fa-briefcase"></i> Create / Edit TPO Credential
                     </h3>
                     <form onsubmit="handleSaveTPO(event)" class="space-y-3 text-xs font-bold">
-                        <input type="hidden" id="admin-tpo-edit-index" value="-1">
+                        <input type="hidden" id="admin-tpo-index" value="-1">
                         <div>
                             <label class="block mb-1">TPO Officer Name</label>
                             <input type="text" id="admin-tpo-name" required placeholder="e.g. Prof. K. V. Gurav" class="w-full neo-border p-2 bg-slate-50">
                         </div>
                         <div>
-                            <label class="block mb-1">TPO Email ID (Any Domain)</label>
-                            <input type="email" id="admin-tpo-email" required placeholder="e.g. tpo.dkte@gmail.com" class="w-full neo-border p-2 bg-slate-50">
+                            <label class="block mb-1">TPO Email ID</label>
+                            <input type="email" id="admin-tpo-email" required placeholder="e.g. tpo@gmail.com" class="w-full neo-border p-2 bg-slate-50">
                         </div>
                         <div>
                             <label class="block mb-1">Password</label>
                             <input type="password" id="admin-tpo-password" required placeholder="Set Password" class="w-full neo-border p-2 bg-slate-50">
                         </div>
-                        <button type="submit" id="btn-submit-tpo" class="w-full neo-btn bg-neoCyan py-2 font-heading text-xs font-black uppercase">
+                        <button type="submit" id="btn-save-tpo" class="w-full neo-btn bg-neoCyan py-2 font-heading text-xs font-black uppercase">
                             Register TPO Credential
                         </button>
                     </form>
 
-                    <!-- Registered TPOs List -->
-                    <div class="border-t-2 border-black pt-3">
-                        <p class="font-heading font-black text-xs uppercase mb-2">Registered TPO Officers</p>
-                        <div id="admin-tpo-list" class="space-y-2">
-                            <p class="text-xs text-slate-500 italic">No TPO officers registered yet.</p>
+                    <!-- Active TPO List Table -->
+                    <div class="pt-4 border-t-2 border-black space-y-2">
+                        <h4 class="font-heading text-xs uppercase font-black">Registered TPO Officers</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left neo-border text-xs font-bold">
+                                <thead class="bg-neoYellow border-b-2 border-black uppercase">
+                                    <tr>
+                                        <th class="p-1.5 border-r border-black">Name</th>
+                                        <th class="p-1.5 border-r border-black">Email</th>
+                                        <th class="p-1.5">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-admin-tpos" class="divide-y divide-black"></tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -278,124 +295,114 @@
         </section>
 
         <!-- ========================================== -->
-        <!-- VIEW 3: HOD PANEL (TEACHER & BATCH ASSIGNMENT) -->
+        <!-- VIEW 3: HOD PANEL -->
         <!-- ========================================== -->
         <section id="section-hod" class="hidden space-y-6">
             <div class="bg-neoGreen neo-border-lg p-5 shadow-neo-lg flex items-center justify-between">
                 <div>
                     <span class="badge-tag bg-white px-2.5 py-1 text-xs font-bold uppercase">Department Head Control</span>
                     <h2 class="font-heading font-black text-2xl mt-1" id="hod-dept-title">HOD DASHBOARD</h2>
-                    <p class="font-bold text-xs">Manage Subjects (Theory/Lab), Faculty Credentials, & Student Batches (T1-T4)</p>
+                    <p class="font-bold text-xs">Manage Subjects, Faculty Credentials & Batches</p>
                 </div>
             </div>
 
-            <!-- Subject Management Section (Theory vs Lab) -->
+            <!-- Add Subject Section for HOD -->
             <div class="bg-white neo-border-lg p-5 shadow-neo-lg space-y-4">
-                <h3 class="font-heading font-black text-base uppercase border-b-2 border-black pb-2 text-neoPurple flex justify-between items-center">
-                    <span><i class="fa-solid fa-book-bookmark"></i> Department Subject Management</span>
+                <h3 class="font-heading font-black text-base uppercase border-b-2 border-black pb-2 text-neoOrange">
+                    <i class="fa-solid fa-book-medical"></i> Add Department Subject
                 </h3>
-                <form onsubmit="handleHodAddSubject(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-bold">
+                <form onsubmit="handleAddDepartmentSubject(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs font-bold">
                     <div>
                         <label class="block mb-1">Subject Name</label>
-                        <input type="text" id="hod-new-subject-name" required placeholder="e.g. Machine Learning" class="w-full neo-border p-2 bg-slate-50">
+                        <input type="text" id="hod-subject-name" required placeholder="e.g. Deep Learning Lab" class="w-full neo-border p-2 bg-slate-50">
                     </div>
                     <div>
                         <label class="block mb-1">Subject Type</label>
-                        <select id="hod-new-subject-type" class="w-full neo-border p-2 bg-slate-50">
+                        <select id="hod-subject-type" class="w-full neo-border p-2 bg-slate-50">
                             <option value="Theory">Theory (Full Class)</option>
                             <option value="Lab">Lab / Practical (Batch Wise)</option>
                         </select>
                     </div>
-                    <div class="flex items-end">
-                        <button type="submit" class="w-full neo-btn bg-neoCyan py-2 font-heading text-xs font-black uppercase">
-                            + Add Subject to Curriculum
+                    <div class="md:col-span-2 flex items-end">
+                        <button type="submit" class="w-full neo-btn bg-neoYellow py-2 font-heading text-xs font-black uppercase">
+                            + Add Subject to Department
                         </button>
                     </div>
                 </form>
-
-                <!-- Department Subjects Roster -->
-                <div class="pt-2">
-                    <p class="font-heading font-black text-xs uppercase mb-2">Curriculum Subjects</p>
-                    <div id="hod-curriculum-subject-list" class="flex flex-wrap gap-2">
-                        <!-- Populated dynamically -->
-                    </div>
-                </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Create/Edit Teacher Credentials & Assign Subject/Batch -->
+                <!-- Create Teacher Credentials & Assign Subject/Batch -->
                 <div class="bg-white neo-border-lg p-5 shadow-neo-lg space-y-4">
-                    <h3 class="font-heading font-black text-base uppercase border-b-2 border-black pb-2 text-neoPink flex justify-between items-center" id="hod-teacher-form-title">
-                        <span><i class="fa-solid fa-chalkboard-user"></i> Create/Assign Faculty</span>
-                        <button id="btn-cancel-teacher-edit" type="button" onclick="cancelTeacherEdit()" class="hidden text-xs bg-neoRed text-white px-2 py-0.5 neo-border">Cancel Edit</button>
+                    <h3 class="font-heading font-black text-base uppercase border-b-2 border-black pb-2 text-neoPink">
+                        <i class="fa-solid fa-chalkboard-user"></i> Create / Edit Faculty Credential
                     </h3>
-                    <form onsubmit="handleSaveTeacher(event)" class="space-y-3 text-xs font-bold">
-                        <input type="hidden" id="hod-teacher-edit-index" value="-1">
+                    <form onsubmit="handleHodSaveTeacher(event)" class="space-y-3 text-xs font-bold">
+                        <input type="hidden" id="hod-teacher-index" value="-1">
                         <div>
                             <label class="block mb-1">Faculty Name</label>
                             <input type="text" id="hod-teacher-name" required placeholder="e.g. Prof. S. R. Mane" class="w-full neo-border p-2 bg-slate-50">
                         </div>
                         <div>
-                            <label class="block mb-1">Faculty Email (Any Domain)</label>
-                            <input type="email" id="hod-teacher-email" required placeholder="e.g. teacher.mane@gmail.com" class="w-full neo-border p-2 bg-slate-50">
+                            <label class="block mb-1">Faculty Email</label>
+                            <input type="email" id="hod-teacher-email" required placeholder="e.g. mane.sr@gmail.com" class="w-full neo-border p-2 bg-slate-50">
                         </div>
                         <div>
-                            <label class="block mb-1">Password</label>
+                            <label class="block mb-1">Faculty Password</label>
                             <input type="password" id="hod-teacher-password" required placeholder="Set Password" class="w-full neo-border p-2 bg-slate-50">
                         </div>
                         <div>
                             <label class="block mb-1">Assigned Subject</label>
-                            <select id="hod-teacher-subject" onchange="handleHodSubjectChange()" class="w-full neo-border p-2 bg-slate-50">
-                                <!-- Populated dynamically based on HOD Department subjects -->
-                            </select>
+                            <select id="hod-teacher-subject" onchange="handleHodSubjectSelectionChange()" class="w-full neo-border p-2 bg-slate-50"></select>
                         </div>
-                        <div id="container-hod-teacher-batch">
-                            <label class="block mb-1" id="label-teacher-batch">Assigned Practical / Mentor Batch</label>
+                        <div id="hod-batch-selection-wrapper">
+                            <label class="block mb-1">Assigned Practical / Mentor Batch</label>
                             <select id="hod-teacher-batch" class="w-full neo-border p-2 bg-slate-50">
                                 <option value="T1">Batch T1 (Roll 01 - 20)</option>
                                 <option value="T2">Batch T2 (Roll 21 - 40)</option>
                                 <option value="T3">Batch T3 (Roll 41 - 60)</option>
                                 <option value="T4">Batch T4 (Roll 61 - 80+)</option>
                             </select>
-                            <p id="hint-teacher-batch" class="text-[10px] text-slate-500 mt-1"></p>
                         </div>
-                        <button type="submit" id="btn-submit-teacher" class="w-full neo-btn bg-neoYellow py-2.5 font-heading text-xs font-black uppercase">
-                            Register/Assign Faculty
+                        <button type="submit" id="btn-save-teacher" class="w-full neo-btn bg-neoGreen py-2.5 font-heading text-xs font-black uppercase">
+                            Register / Update Faculty
                         </button>
                     </form>
-
-                    <!-- Department Faculty Roster -->
-                    <div class="border-t-2 border-black pt-3">
-                        <p class="font-heading font-black text-xs uppercase mb-2">Department Faculty List</p>
-                        <div id="hod-teacher-list" class="space-y-2">
-                            <p class="text-xs text-slate-500 italic">No faculty added yet.</p>
-                        </div>
-                    </div>
                 </div>
 
-                <!-- Class Student Batch Division -->
+                <!-- Department Faculty & Student Roster -->
                 <div class="lg:col-span-2 bg-white neo-border-lg p-5 shadow-neo-lg space-y-4">
-                    <h3 class="font-heading font-black text-base uppercase border-b-2 border-black pb-2 flex items-center justify-between">
-                        <span><i class="fa-solid fa-users-gear"></i> Department Student Roster & Batch Allocation</span>
-                        <span id="hod-student-count-badge" class="badge-tag bg-neoCyan px-2 py-0.5 text-[10px]">Total: 0 Students</span>
+                    <h3 class="font-heading font-black text-base uppercase border-b-2 border-black pb-2">
+                        <i class="fa-solid fa-chalkboard-user"></i> Department Faculty Members
                     </h3>
-
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse neo-border font-bold text-xs">
                             <thead>
                                 <tr class="bg-neoYellow border-b-2 border-black uppercase">
-                                    <th class="p-2.5 border-r-2 border-black">Roll & Name</th>
-                                    <th class="p-2.5 border-r-2 border-black">Branch</th>
-                                    <th class="p-2.5 border-r-2 border-black">Assigned Batch</th>
-                                    <th class="p-2.5 border-r-2 border-black">Assigned Mentor</th>
-                                    <th class="p-2.5">Action</th>
+                                    <th class="p-2 border-r-2 border-black">Faculty Name</th>
+                                    <th class="p-2 border-r-2 border-black">Email</th>
+                                    <th class="p-2 border-r-2 border-black">Assigned Subjects & Batches</th>
+                                    <th class="p-2">Action</th>
                                 </tr>
                             </thead>
-                            <tbody id="table-hod-students" class="divide-y-2 divide-black">
-                                <tr>
-                                    <td colspan="5" class="p-4 text-center text-slate-500 italic">No students registered in this department yet.</td>
+                            <tbody id="table-hod-teachers" class="divide-y-2 divide-black"></tbody>
+                        </table>
+                    </div>
+
+                    <h3 class="font-heading font-black text-base uppercase border-b-2 border-black pb-2 pt-4">
+                        <i class="fa-solid fa-users-gear"></i> Student Roster
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse neo-border font-bold text-xs">
+                            <thead>
+                                <tr class="bg-neoYellow border-b-2 border-black uppercase">
+                                    <th class="p-2 border-r-2 border-black">Roll & Name</th>
+                                    <th class="p-2 border-r-2 border-black">Branch</th>
+                                    <th class="p-2 border-r-2 border-black">Assigned Batch</th>
+                                    <th class="p-2">Action</th>
                                 </tr>
-                            </tbody>
+                            </thead>
+                            <tbody id="table-hod-students" class="divide-y-2 divide-black"></tbody>
                         </table>
                     </div>
                 </div>
@@ -403,34 +410,68 @@
         </section>
 
         <!-- ========================================== -->
-        <!-- VIEW 5: TEACHER / MENTOR PORTAL -->
+        <!-- VIEW 4: STUDENT PORTAL -->
+        <!-- ========================================== -->
+        <section id="section-student" class="hidden space-y-6">
+            <div class="bg-neoCyan neo-border-lg p-5 md:p-6 shadow-neo-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div>
+                    <span class="badge-tag bg-white px-2.5 py-1 text-xs font-bold uppercase">Student Academic Hub</span>
+                    <h2 class="font-heading font-black text-2xl md:text-3xl mt-1" id="stu-display-name">STUDENT NAME</h2>
+                    <p class="font-bold text-xs text-black/80" id="stu-display-dept">B.Tech • Semester V (2026)</p>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <button onclick="downloadStudentMonthlyReport()" class="neo-btn bg-neoPink px-4 py-2.5 font-heading text-xs font-black uppercase flex items-center gap-2">
+                        <i class="fa-solid fa-file-pdf text-base"></i> Generate Monthly Report (PDF)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Subject-wise Marks Table -->
+            <div class="bg-white neo-border-lg p-5 shadow-neo-lg space-y-4">
+                <div class="flex items-center justify-between border-b-4 border-black pb-3">
+                    <h3 class="font-heading font-black text-lg uppercase flex items-center gap-2">
+                        <i class="fa-solid fa-graduation-cap text-neoPink"></i> Subject Marks
+                    </h3>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse neo-border font-bold text-xs">
+                        <thead>
+                            <tr class="bg-neoYellow border-b-2 border-black uppercase">
+                                <th class="p-3 border-r-2 border-black">Subject Code & Name</th>
+                                <th class="p-3 border-r-2 border-black">SE-1 (25)</th>
+                                <th class="p-3 border-r-2 border-black">SE-2 (25)</th>
+                                <th class="p-3 border-r-2 border-black">SEE (50)</th>
+                                <th class="p-3 border-r-2 border-black">Internal (50)</th>
+                                <th class="p-3 border-r-2 border-black">Ext Viva (50)</th>
+                                <th class="p-3 border-r-2 border-black">Total %</th>
+                                <th class="p-3">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-student-marks" class="divide-y-2 divide-black"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 5: TEACHER PORTAL -->
         <!-- ========================================== -->
         <section id="section-teacher" class="hidden space-y-6">
             <div class="bg-neoPink neo-border-lg p-5 shadow-neo-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                    <span class="badge-tag bg-white px-2.5 py-1 text-xs font-bold uppercase">Faculty & Batch Mentor Portal</span>
+                    <span class="badge-tag bg-white px-2.5 py-1 text-xs font-bold uppercase">Faculty Dashboard</span>
                     <h2 class="font-heading font-black text-2xl mt-1" id="teacher-profile-name">FACULTY NAME</h2>
-                    <p class="font-bold text-xs" id="teacher-profile-sub">Assigned Subject: -- • Mentor for Batch --</p>
+                    <p class="font-bold text-xs" id="teacher-profile-sub">Assigned Courses</p>
                 </div>
-
-                <!-- Multi-subject Selector Dropdown for Teachers -->
-                <div id="teacher-subject-selector-box" class="bg-white neo-border p-2 text-xs font-bold flex items-center gap-2">
-                    <label for="teacher-subject-dropdown" class="uppercase text-[11px]"><i class="fa-solid fa-book text-neoPurple"></i> Active Subject:</label>
-                    <select id="teacher-subject-dropdown" onchange="handleTeacherSelectSubject(this.value)" class="neo-border p-1 bg-neoYellow/30 font-bold focus:outline-none">
-                        <!-- Populated dynamically if teacher has 2-3 subjects -->
-                    </select>
+                <div class="flex items-center gap-2" id="teacher-subject-selector-wrapper">
+                    <label class="font-bold text-xs text-white">Select Active Course:</label>
+                    <select id="teacher-active-subject-select" onchange="handleTeacherSubjectChange()" class="neo-btn bg-white px-3 py-1.5 text-xs font-bold uppercase"></select>
                 </div>
             </div>
 
-            <!-- Teacher Entry Tabs -->
             <div class="bg-white neo-border-lg p-5 shadow-neo-lg space-y-4">
-                <div class="flex items-center justify-between border-b-4 border-black pb-3">
-                    <h3 class="font-heading font-black text-lg uppercase" id="teacher-dashboard-heading">
-                        Class Marks Entry & Batch Mentorship Dashboard
-                    </h3>
-                    <span class="badge-tag bg-neoYellow px-2 py-1 text-xs">Semester V (2026)</span>
-                </div>
-
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse neo-border font-bold text-xs">
                         <thead>
@@ -442,12 +483,10 @@
                                 <th class="p-2.5 border-r-2 border-black">SEE (50)</th>
                                 <th class="p-2.5 border-r-2 border-black">Internal (50)</th>
                                 <th class="p-2.5 border-r-2 border-black">Ext Viva (50)</th>
-                                <th class="p-2.5">Mentor Action</th>
+                                <th class="p-2.5">Action</th>
                             </tr>
                         </thead>
-                        <tbody id="table-teacher-entry" class="divide-y-2 divide-black">
-                            <!-- Populated dynamically -->
-                        </tbody>
+                        <tbody id="table-teacher-entry" class="divide-y-2 divide-black"></tbody>
                     </table>
                 </div>
             </div>
@@ -460,8 +499,7 @@
             <div class="bg-neoGreen neo-border-lg p-5 shadow-neo-lg flex items-center justify-between">
                 <div>
                     <span class="badge-tag bg-white px-2.5 py-1 text-xs font-bold uppercase">Training & Placement Cell</span>
-                    <h2 class="font-heading font-black text-2xl mt-1">PLACEMENT INTELLIGENCE DASHBOARD</h2>
-                    <p class="font-bold text-xs">Cohort Risk Oversight & Placement Eligibility Tracking (2026)</p>
+                    <h2 class="font-heading font-black text-2xl mt-1">PLACEMENT DASHBOARD</h2>
                 </div>
             </div>
 
@@ -474,13 +512,10 @@
                                 <th class="p-2.5 border-r-2 border-black">Branch</th>
                                 <th class="p-2.5 border-r-2 border-black">CGPA</th>
                                 <th class="p-2.5 border-r-2 border-black">Attendance</th>
-                                <th class="p-2.5 border-r-2 border-black">Risk Level</th>
-                                <th class="p-2.5">Placement Eligibility Status</th>
+                                <th class="p-2.5">Placement Status</th>
                             </tr>
                         </thead>
-                        <tbody id="table-tpo-cohort" class="divide-y-2 divide-black">
-                            <!-- JS render -->
-                        </tbody>
+                        <tbody id="table-tpo-cohort" class="divide-y-2 divide-black"></tbody>
                     </table>
                 </div>
             </div>
@@ -500,14 +535,13 @@
 
         <div class="grid grid-cols-2 gap-4 text-xs font-bold border-b-2 border-black pb-4">
             <div>
-                <p><span class="text-slate-600">STUDENT NAME:</span> <span id="pdf-stu-name">--</span></p>
-                <p><span class="text-slate-600">ROLL NO / PRN:</span> <span id="pdf-stu-roll">--</span></p>
-                <p><span class="text-slate-600">BRANCH:</span> <span id="pdf-stu-branch">--</span></p>
+                <p><span class="text-slate-600">STUDENT NAME:</span> <span id="pdf-stu-name">Student</span></p>
+                <p><span class="text-slate-600">ROLL NO / PRN:</span> <span id="pdf-stu-roll">24UAD000</span></p>
+                <p><span class="text-slate-600">BRANCH:</span> <span id="pdf-stu-branch">CSE</span></p>
             </div>
             <div>
                 <p><span class="text-slate-600">ACADEMIC YEAR:</span> 2026-2027</p>
                 <p><span class="text-slate-600">SEMESTER:</span> V</p>
-                <p><span class="text-slate-600">REPORT DATE:</span> October 2026</p>
             </div>
         </div>
 
@@ -527,127 +561,39 @@
                 <tbody id="pdf-table-marks"></tbody>
             </table>
         </div>
-
-        <div class="space-y-2">
-            <h3 class="font-heading font-black text-xs uppercase bg-neoPink px-2 py-1 neo-border">2. Extracurriculars & Mentor Validation</h3>
-            <ul id="pdf-skills-list" class="list-disc pl-5 text-xs font-bold space-y-1"></ul>
-        </div>
     </div>
 
     <!-- JAVASCRIPT APPLICATION ARCHITECTURE -->
     <script>
-        // Active role & logged in session state
+        // System Databases
         let currentRole = 'student';
         let loggedInUser = null;
-        let activeTeacherSubjectIndex = 0; // Index for current subject in teacher's assigned subjects array
 
-        // Department-wise curriculum subjects with Theory / Lab types
+        // Dynamic Subjects DB per Department
         const DEPT_SUBJECTS = {
             'CSE (AI-DS)': [
-                { name: 'Data Structures & Algorithms', type: 'Lab' },
-                { name: 'Database Management Systems', type: 'Lab' },
-                { name: 'Computer Networks', type: 'Theory' },
-                { name: 'Artificial Intelligence Basics', type: 'Theory' }
+                { name: 'Data Structures & Algorithms', type: 'Theory' },
+                { name: 'DBMS Lab', type: 'Lab' }
             ],
             'CSE (AI-ML)': [
-                { name: 'Deep Learning & Neural Nets', type: 'Lab' },
-                { name: 'Computer Vision', type: 'Lab' },
-                { name: 'Natural Language Processing', type: 'Theory' },
-                { name: 'Reinforcement Learning', type: 'Theory' }
+                { name: 'Deep Learning', type: 'Theory' },
+                { name: 'Computer Vision Lab', type: 'Lab' }
             ]
         };
 
-        // SUPER ADMIN CREDENTIALS (ONLY PREDEFINED ACCOUNT)
+        // ONLY Super Admin is predefined
         const SUPER_ADMIN = {
             email: 'admin@edexplus.com',
-            password: 'edexplus@112233',
-            name: 'System Admin'
+            password: 'edexplus@112233'
         };
 
-        // DYNAMIC SYSTEM DATABASES (Initially Empty - Populated via Admin/HOD panels & Signup)
+        // All other databases start EMPTY
         const SYSTEM_HODS = [];
         const SYSTEM_TPOS = [];
         const SYSTEM_TEACHERS = [];
         const SYSTEM_STUDENTS = [];
 
-        // Dynamic Subjects Management by HOD
-        function handleHodAddSubject(e) {
-            e.preventDefault();
-            if (!loggedInUser || !loggedInUser.dept) return;
-
-            const name = document.getElementById('hod-new-subject-name').value.trim();
-            const type = document.getElementById('hod-new-subject-type').value;
-
-            if (!name) return;
-
-            const deptSubs = DEPT_SUBJECTS[loggedInUser.dept] || [];
-            if (deptSubs.some(s => s.name.toLowerCase() === name.toLowerCase())) {
-                alert("⚠️ Subject with this name already exists in curriculum!");
-                return;
-            }
-
-            deptSubs.push({ name: name, type: type });
-            DEPT_SUBJECTS[loggedInUser.dept] = deptSubs;
-
-            document.getElementById('hod-new-subject-name').value = '';
-            alert(`✅ Added new ${type} Subject: "${name}" to ${loggedInUser.dept}`);
-
-            renderHodSubjectLists();
-        }
-
-        function renderHodSubjectLists() {
-            if (!loggedInUser || !loggedInUser.dept) return;
-            const deptSubs = DEPT_SUBJECTS[loggedInUser.dept] || [];
-
-            // Render subject tags list
-            const tagContainer = document.getElementById('hod-curriculum-subject-list');
-            if (tagContainer) {
-                tagContainer.innerHTML = '';
-                deptSubs.forEach((sub, idx) => {
-                    const colorClass = sub.type === 'Lab' ? 'bg-neoPink/20 border-neoPink' : 'bg-neoCyan/20 border-neoCyan';
-                    tagContainer.innerHTML += `
-                        <div class="px-2.5 py-1 neo-border text-xs font-bold flex items-center gap-1.5 ${colorClass}">
-                            <span>${sub.name}</span>
-                            <span class="badge-tag bg-white px-1.5 py-0.2 text-[9px] uppercase">${sub.type}</span>
-                        </div>
-                    `;
-                });
-            }
-
-            // Render dropdown in Teacher assignment form
-            const subSelect = document.getElementById('hod-teacher-subject');
-            if (subSelect) {
-                subSelect.innerHTML = '';
-                deptSubs.forEach(s => {
-                    subSelect.innerHTML += `<option value="${s.name}">${s.name} (${s.type})</option>`;
-                });
-                handleHodSubjectChange();
-            }
-        }
-
-        // Toggle batch field based on whether selected subject is Theory or Lab
-        function handleHodSubjectChange() {
-            const selectedSubjectName = document.getElementById('hod-teacher-subject').value;
-            if (!loggedInUser || !loggedInUser.dept) return;
-
-            const deptSubs = DEPT_SUBJECTS[loggedInUser.dept] || [];
-            const subObj = deptSubs.find(s => s.name === selectedSubjectName);
-
-            const batchSelect = document.getElementById('hod-teacher-batch');
-            const hint = document.getElementById('hint-teacher-batch');
-
-            if (subObj && subObj.type === 'Theory') {
-                batchSelect.disabled = true;
-                batchSelect.classList.add('opacity-50', 'bg-slate-200');
-                hint.innerText = "ℹ️ Theory subjects apply to Full Class (No batch division).";
-            } else {
-                batchSelect.disabled = false;
-                batchSelect.classList.remove('opacity-50', 'bg-slate-200');
-                hint.innerText = "ℹ️ Practical/Lab subjects require batch allocation (T1-T4).";
-            }
-        }
-
-        // Role tab switcher in login screen
+        // Auth Role Selector Tab Switching
         function setAuthRole(role) {
             currentRole = role;
             document.querySelectorAll('#btn-tab-student, #btn-tab-teacher, #btn-tab-hod, #btn-tab-tpo, #btn-tab-admin').forEach(btn => {
@@ -655,39 +601,32 @@
             });
 
             const emailInput = document.getElementById('auth-email');
-            const passwordInput = document.getElementById('auth-password');
             const emailHint = document.getElementById('auth-email-hint');
             const labelEmail = document.getElementById('label-email');
 
-            // Clear inputs when switching roles
-            emailInput.value = "";
-            passwordInput.value = "";
+            emailInput.value = '';
+            document.getElementById('auth-password').value = '';
 
             if (role === 'student') {
                 document.getElementById('btn-tab-student').className = "neo-btn bg-neoCyan py-2 text-[11px] font-black uppercase";
                 labelEmail.innerText = "Student DKTE Email ID";
-                emailInput.placeholder = "e.g. 24uad002@dkte.ac.in";
                 emailHint.innerText = "⚠️ Student format: 24UADxxx@dkte.ac.in";
                 emailHint.classList.remove('hidden');
             } else if (role === 'teacher') {
                 document.getElementById('btn-tab-teacher').className = "neo-btn bg-neoPink py-2 text-[11px] font-black uppercase";
                 labelEmail.innerText = "Faculty Email ID";
-                emailInput.placeholder = "Enter Faculty Email";
                 emailHint.classList.add('hidden');
             } else if (role === 'hod') {
                 document.getElementById('btn-tab-hod').className = "neo-btn bg-neoGreen py-2 text-[11px] font-black uppercase";
                 labelEmail.innerText = "HOD Email ID";
-                emailInput.placeholder = "Enter HOD Email";
                 emailHint.classList.add('hidden');
             } else if (role === 'tpo') {
                 document.getElementById('btn-tab-tpo').className = "neo-btn bg-neoYellow py-2 text-[11px] font-black uppercase";
                 labelEmail.innerText = "TPO Officer Email ID";
-                emailInput.placeholder = "Enter TPO Email";
                 emailHint.classList.add('hidden');
             } else if (role === 'admin') {
                 document.getElementById('btn-tab-admin').className = "neo-btn bg-neoOrange py-2 text-[11px] font-black uppercase";
                 labelEmail.innerText = "System Admin Email ID";
-                emailInput.placeholder = "admin@edexplus.com";
                 emailHint.classList.add('hidden');
             }
         }
@@ -706,29 +645,28 @@
             }
         }
 
-        // Handle Authentication & Role Isolation
+        // Handle Login Submission & Security Guardrails
         function handleAuthLogin(e) {
             e.preventDefault();
             const email = document.getElementById('auth-email').value.trim().toLowerCase();
             const password = document.getElementById('auth-password').value;
 
-            // SECURITY GUARDRAIL: Prevent students from entering staff portals
             if (email.startsWith('24uad') && currentRole !== 'student') {
-                alert("⛔ ACCESS DENIED! Student emails (24UADxxx@dkte.ac.in) are strictly restricted from Admin, HOD, Teacher, and TPO panels.");
+                alert("⛔ ACCESS DENIED! Student emails are strictly restricted from official panels.");
                 return;
             }
 
             if (currentRole === 'admin') {
-                if (email === SUPER_ADMIN.email && password === SUPER_ADMIN.password) {
-                    loggedInUser = { name: SUPER_ADMIN.name, email: email };
+                if (email === SUPER_ADMIN.email.toLowerCase() && password === SUPER_ADMIN.password) {
+                    loggedInUser = { name: 'Super Admin', email: email };
                     launchPortal('admin');
                 } else {
-                    alert("⛔ Invalid Admin Credentials! Use admin@edexplus.com and edexplus@112233");
+                    alert("⛔ Invalid Admin Credentials!");
                 }
             } else if (currentRole === 'hod') {
                 const hod = SYSTEM_HODS.find(h => h.email.toLowerCase() === email && h.password === password);
                 if (!hod) {
-                    alert("⛔ Invalid HOD Credentials! Ensure HOD account is created via System Admin Panel.");
+                    alert("⛔ Invalid HOD Credentials! Ensure HOD is added via Admin Panel.");
                     return;
                 }
                 loggedInUser = hod;
@@ -736,7 +674,7 @@
             } else if (currentRole === 'teacher') {
                 const teacher = SYSTEM_TEACHERS.find(t => t.email.toLowerCase() === email && t.password === password);
                 if (!teacher) {
-                    alert("⛔ Invalid Teacher Credentials! Ensure Faculty account is created via Department HOD Panel.");
+                    alert("⛔ Invalid Faculty Credentials! Ensure Faculty is registered by HOD.");
                     return;
                 }
                 loggedInUser = teacher;
@@ -744,19 +682,15 @@
             } else if (currentRole === 'tpo') {
                 const tpo = SYSTEM_TPOS.find(t => t.email.toLowerCase() === email && t.password === password);
                 if (!tpo) {
-                    alert("⛔ Invalid TPO Credentials! Ensure TPO account is created via System Admin Panel.");
+                    alert("⛔ Invalid TPO Credentials!");
                     return;
                 }
                 loggedInUser = tpo;
                 launchPortal('tpo');
             } else if (currentRole === 'student') {
-                if (!email.startsWith('24uad')) {
-                    alert("⚠️ Student Email must follow pattern: 24UADxxx@dkte.ac.in");
-                    return;
-                }
                 const student = SYSTEM_STUDENTS.find(s => s.email.toLowerCase() === email && s.password === password);
                 if (!student) {
-                    alert("⚠️ Student record not found! Please click 'New Student? Sign Up' below to create your account.");
+                    alert("⛔ Student not found! Please complete Student Sign Up first.");
                     return;
                 }
                 loggedInUser = student;
@@ -764,7 +698,7 @@
             }
         }
 
-        // Student Self Signup Functionality
+        // Student Self Signup
         function handleStudentSignup(e) {
             e.preventDefault();
             const name = document.getElementById('signup-name').value.trim();
@@ -778,11 +712,6 @@
                 return;
             }
 
-            if (SYSTEM_STUDENTS.some(s => s.email === email || s.roll === roll)) {
-                alert("⚠️ A student with this Roll No or Email already exists!");
-                return;
-            }
-
             const defaultSubjects = DEPT_SUBJECTS[branch] || [];
             const defaultMarks = defaultSubjects.map(sub => ({ subject: sub.name, se1: 0, se2: 0, see: 0, internal: 0, viva: 0 }));
 
@@ -793,7 +722,6 @@
                 password: password,
                 branch: branch,
                 batch: 'T1',
-                mentor: 'Assigned by HOD',
                 attendance: 80.0,
                 cgpa: 7.50,
                 marks: defaultMarks,
@@ -801,304 +729,269 @@
             };
 
             SYSTEM_STUDENTS.push(newStudent);
-            alert(`✅ Signup Successful! Welcome ${name} (${roll}) to ${branch}. You can now log in.`);
+            alert(`✅ Signup Successful! Welcome ${name}. Please Login now.`);
             toggleSignupMode(false);
-
-            // Auto-fill login email for convenience
-            setAuthRole('student');
-            document.getElementById('auth-email').value = email;
         }
 
-        // ADMIN PANEL: Save (Create or Update) HOD Credentials
+        // Admin Save/Edit HOD & TPO
         function handleSaveHOD(e) {
             e.preventDefault();
-            const index = parseInt(document.getElementById('admin-hod-edit-index').value);
+            const index = parseInt(document.getElementById('admin-hod-index').value);
             const name = document.getElementById('admin-hod-name').value.trim();
             const dept = document.getElementById('admin-hod-dept').value;
             const email = document.getElementById('admin-hod-email').value.trim().toLowerCase();
             const password = document.getElementById('admin-hod-password').value;
 
-            if (index >= 0) {
-                SYSTEM_HODS[index] = { name, email, dept, password };
-                alert(`✅ HOD Credentials updated for ${name}!`);
+            if (index === -1) {
+                SYSTEM_HODS.push({ name, dept, email, password });
+                alert(`✅ HOD Credential created for ${name}!`);
             } else {
-                if (SYSTEM_HODS.some(h => h.email === email)) {
-                    alert("⚠️ HOD email already registered!");
-                    return;
-                }
-                SYSTEM_HODS.push({ name, email, dept, password });
-                alert(`✅ New HOD Registered: ${name} (${dept})`);
+                SYSTEM_HODS[index] = { name, dept, email, password };
+                alert(`✅ HOD Credential updated for ${name}!`);
             }
 
-            cancelHodEdit();
-            renderAdminHodList();
+            resetAdminHodForm();
+            renderAdminHodTable();
         }
 
-        function editHod(index) {
-            const hod = SYSTEM_HODS[index];
-            document.getElementById('admin-hod-edit-index').value = index;
-            document.getElementById('admin-hod-name').value = hod.name;
-            document.getElementById('admin-hod-dept').value = hod.dept;
-            document.getElementById('admin-hod-email').value = hod.email;
-            document.getElementById('admin-hod-password').value = hod.password;
-
-            document.getElementById('admin-hod-form-title').children[0].innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Edit HOD Credential`;
-            document.getElementById('btn-submit-hod').innerText = "Update HOD Credential";
-            document.getElementById('btn-cancel-hod-edit').classList.remove('hidden');
-        }
-
-        function cancelHodEdit() {
-            document.getElementById('admin-hod-edit-index').value = "-1";
+        function resetAdminHodForm() {
+            document.getElementById('admin-hod-index').value = '-1';
             document.getElementById('admin-hod-name').value = '';
             document.getElementById('admin-hod-email').value = '';
             document.getElementById('admin-hod-password').value = '';
-            document.getElementById('admin-hod-form-title').children[0].innerHTML = `<i class="fa-solid fa-user-gear"></i> Create HOD Credential`;
-            document.getElementById('btn-submit-hod').innerText = "Register HOD Credential";
-            document.getElementById('btn-cancel-hod-edit').classList.add('hidden');
+            document.getElementById('btn-save-hod').innerText = 'Register HOD Credential';
+        }
+
+        function editHod(index) {
+            const h = SYSTEM_HODS[index];
+            document.getElementById('admin-hod-index').value = index;
+            document.getElementById('admin-hod-name').value = h.name;
+            document.getElementById('admin-hod-dept').value = h.dept;
+            document.getElementById('admin-hod-email').value = h.email;
+            document.getElementById('admin-hod-password').value = h.password;
+            document.getElementById('btn-save-hod').innerText = 'Update HOD Credential';
         }
 
         function deleteHod(index) {
-            if (confirm(`Are you sure you want to delete HOD ${SYSTEM_HODS[index].name}?`)) {
+            if (confirm("Are you sure you want to delete this HOD credential?")) {
                 SYSTEM_HODS.splice(index, 1);
-                renderAdminHodList();
+                renderAdminHodTable();
             }
         }
 
-        function renderAdminHodList() {
-            const container = document.getElementById('admin-hod-list');
-            if (!container) return;
-            if (SYSTEM_HODS.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-500 italic">No HODs registered yet.</p>`;
-                return;
-            }
-            container.innerHTML = '';
+        function renderAdminHodTable() {
+            const tbody = document.getElementById('table-admin-hods');
+            tbody.innerHTML = '';
             SYSTEM_HODS.forEach((h, idx) => {
-                container.innerHTML += `
-                    <div class="p-2 bg-neoYellow/20 neo-border flex items-center justify-between font-bold text-xs">
-                        <div>
-                            <span class="block font-black">${h.name} (${h.dept})</span>
-                            <span class="text-[10px] text-slate-600 font-mono">${h.email}</span>
-                        </div>
-                        <div class="flex gap-1">
-                            <button onclick="editHod(${idx})" class="neo-btn bg-neoCyan px-2 py-0.5 text-[10px] uppercase font-black">Edit</button>
-                            <button onclick="deleteHod(${idx})" class="neo-btn bg-neoRed text-white px-2 py-0.5 text-[10px] uppercase font-black">Del</button>
-                        </div>
-                    </div>
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="p-1.5 border-r border-black">${h.name}</td>
+                        <td class="p-1.5 border-r border-black">${h.dept}</td>
+                        <td class="p-1.5 border-r border-black">${h.email}</td>
+                        <td class="p-1.5 space-x-1">
+                            <button onclick="editHod(${idx})" class="neo-btn bg-neoCyan px-1.5 py-0.5 text-[10px]">Edit</button>
+                            <button onclick="deleteHod(${idx})" class="neo-btn bg-neoOrange text-white px-1.5 py-0.5 text-[10px]">Del</button>
+                        </td>
+                    </tr>
                 `;
             });
         }
 
-        // ADMIN PANEL: Save (Create or Update) TPO Credentials
         function handleSaveTPO(e) {
             e.preventDefault();
-            const index = parseInt(document.getElementById('admin-tpo-edit-index').value);
+            const index = parseInt(document.getElementById('admin-tpo-index').value);
             const name = document.getElementById('admin-tpo-name').value.trim();
             const email = document.getElementById('admin-tpo-email').value.trim().toLowerCase();
             const password = document.getElementById('admin-tpo-password').value;
 
-            if (index >= 0) {
-                SYSTEM_TPOS[index] = { name, email, password };
-                alert(`✅ TPO Credentials updated for ${name}!`);
-            } else {
-                if (SYSTEM_TPOS.some(t => t.email === email)) {
-                    alert("⚠️ TPO email already registered!");
-                    return;
-                }
+            if (index === -1) {
                 SYSTEM_TPOS.push({ name, email, password });
-                alert(`✅ New TPO Officer Registered: ${name}`);
+                alert(`✅ TPO Credential created for ${name}!`);
+            } else {
+                SYSTEM_TPOS[index] = { name, email, password };
+                alert(`✅ TPO Credential updated for ${name}!`);
             }
 
-            cancelTpoEdit();
-            renderAdminTpoList();
+            resetAdminTpoForm();
+            renderAdminTpoTable();
         }
 
-        function editTpo(index) {
-            const tpo = SYSTEM_TPOS[index];
-            document.getElementById('admin-tpo-edit-index').value = index;
-            document.getElementById('admin-tpo-name').value = tpo.name;
-            document.getElementById('admin-tpo-email').value = tpo.email;
-            document.getElementById('admin-tpo-password').value = tpo.password;
-
-            document.getElementById('admin-tpo-form-title').children[0].innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Edit TPO Credential`;
-            document.getElementById('btn-submit-tpo').innerText = "Update TPO Credential";
-            document.getElementById('btn-cancel-tpo-edit').classList.remove('hidden');
-        }
-
-        function cancelTpoEdit() {
-            document.getElementById('admin-tpo-edit-index').value = "-1";
+        function resetAdminTpoForm() {
+            document.getElementById('admin-tpo-index').value = '-1';
             document.getElementById('admin-tpo-name').value = '';
             document.getElementById('admin-tpo-email').value = '';
             document.getElementById('admin-tpo-password').value = '';
-            document.getElementById('admin-tpo-form-title').children[0].innerHTML = `<i class="fa-solid fa-briefcase"></i> Create TPO Credential`;
-            document.getElementById('btn-submit-tpo').innerText = "Register TPO Credential";
-            document.getElementById('btn-cancel-tpo-edit').classList.add('hidden');
+            document.getElementById('btn-save-tpo').innerText = 'Register TPO Credential';
+        }
+
+        function editTpo(index) {
+            const t = SYSTEM_TPOS[index];
+            document.getElementById('admin-tpo-index').value = index;
+            document.getElementById('admin-tpo-name').value = t.name;
+            document.getElementById('admin-tpo-email').value = t.email;
+            document.getElementById('admin-tpo-password').value = t.password;
+            document.getElementById('btn-save-tpo').innerText = 'Update TPO Credential';
         }
 
         function deleteTpo(index) {
-            if (confirm(`Are you sure you want to delete TPO Officer ${SYSTEM_TPOS[index].name}?`)) {
+            if (confirm("Are you sure you want to delete this TPO credential?")) {
                 SYSTEM_TPOS.splice(index, 1);
-                renderAdminTpoList();
+                renderAdminTpoTable();
             }
         }
 
-        function renderAdminTpoList() {
-            const container = document.getElementById('admin-tpo-list');
-            if (!container) return;
-            if (SYSTEM_TPOS.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-500 italic">No TPO officers registered yet.</p>`;
-                return;
-            }
-            container.innerHTML = '';
+        function renderAdminTpoTable() {
+            const tbody = document.getElementById('table-admin-tpos');
+            tbody.innerHTML = '';
             SYSTEM_TPOS.forEach((t, idx) => {
-                container.innerHTML += `
-                    <div class="p-2 bg-neoCyan/20 neo-border flex items-center justify-between font-bold text-xs">
-                        <div>
-                            <span class="block font-black">${t.name}</span>
-                            <span class="text-[10px] text-slate-600 font-mono">${t.email}</span>
-                        </div>
-                        <div class="flex gap-1">
-                            <button onclick="editTpo(${idx})" class="neo-btn bg-neoYellow px-2 py-0.5 text-[10px] uppercase font-black">Edit</button>
-                            <button onclick="deleteTpo(${idx})" class="neo-btn bg-neoRed text-white px-2 py-0.5 text-[10px] uppercase font-black">Del</button>
-                        </div>
-                    </div>
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="p-1.5 border-r border-black">${t.name}</td>
+                        <td class="p-1.5 border-r border-black">${t.email}</td>
+                        <td class="p-1.5 space-x-1">
+                            <button onclick="editTpo(${idx})" class="neo-btn bg-neoCyan px-1.5 py-0.5 text-[10px]">Edit</button>
+                            <button onclick="deleteTpo(${idx})" class="neo-btn bg-neoOrange text-white px-1.5 py-0.5 text-[10px]">Del</button>
+                        </td>
+                    </tr>
                 `;
             });
         }
 
-        // HOD PANEL: Save (Create or Edit/Append) Faculty Credentials & Multi-Subject Support
-        function handleSaveTeacher(e) {
+        // HOD Subject & Faculty Management
+        function handleAddDepartmentSubject(e) {
             e.preventDefault();
-            const index = parseInt(document.getElementById('hod-teacher-edit-index').value);
+            const subName = document.getElementById('hod-subject-name').value.trim();
+            const subType = document.getElementById('hod-subject-type').value;
+
+            if (!DEPT_SUBJECTS[loggedInUser.dept]) {
+                DEPT_SUBJECTS[loggedInUser.dept] = [];
+            }
+
+            DEPT_SUBJECTS[loggedInUser.dept].push({ name: subName, type: subType });
+            alert(`✅ Subject "${subName}" (${subType}) added to ${loggedInUser.dept}!`);
+
+            document.getElementById('hod-subject-name').value = '';
+            populateHodSubjectDropdown();
+        }
+
+        function populateHodSubjectDropdown() {
+            const subSelect = document.getElementById('hod-teacher-subject');
+            subSelect.innerHTML = '';
+            const subjects = DEPT_SUBJECTS[loggedInUser.dept] || [];
+
+            subjects.forEach(s => {
+                subSelect.innerHTML += `<option value="${s.name}" data-type="${s.type}">${s.name} (${s.type})</option>`;
+            });
+
+            handleHodSubjectSelectionChange();
+        }
+
+        function handleHodSubjectSelectionChange() {
+            const subSelect = document.getElementById('hod-teacher-subject');
+            if (!subSelect.options.length) return;
+
+            const selectedOption = subSelect.options[subSelect.selectedIndex];
+            const subType = selectedOption.getAttribute('data-type');
+            const batchWrapper = document.getElementById('hod-batch-selection-wrapper');
+
+            if (subType === 'Theory') {
+                batchWrapper.style.display = 'none';
+            } else {
+                batchWrapper.style.display = 'block';
+            }
+        }
+
+        function handleHodSaveTeacher(e) {
+            e.preventDefault();
+            const index = parseInt(document.getElementById('hod-teacher-index').value);
             const name = document.getElementById('hod-teacher-name').value.trim();
             const email = document.getElementById('hod-teacher-email').value.trim().toLowerCase();
             const password = document.getElementById('hod-teacher-password').value;
-            const subject = document.getElementById('hod-teacher-subject').value;
+            const subName = document.getElementById('hod-teacher-subject').value;
 
-            const deptSubs = DEPT_SUBJECTS[loggedInUser.dept] || [];
-            const subObj = deptSubs.find(s => s.name === subject);
-            const isTheory = subObj && subObj.type === 'Theory';
-
-            const batch = isTheory ? 'ALL' : document.getElementById('hod-teacher-batch').value;
+            const subObj = (DEPT_SUBJECTS[loggedInUser.dept] || []).find(s => s.name === subName);
+            const isLab = subObj && subObj.type === 'Lab';
+            const batch = isLab ? document.getElementById('hod-teacher-batch').value : 'All Class (Theory)';
 
             if (email.startsWith('24uad')) {
-                alert("⛔ Error! Cannot assign student email to faculty account.");
+                alert("⛔ Cannot assign student email to faculty!");
                 return;
             }
 
-            const existingTeacherIndex = SYSTEM_TEACHERS.findIndex(t => t.email === email);
+            let teacher = SYSTEM_TEACHERS.find(t => t.email === email);
 
-            if (index >= 0) {
-                // Updating specific index
-                const existingAssignments = SYSTEM_TEACHERS[index].assignments || [];
-                // Check if assignment already exists
-                const existingAssgnIdx = existingAssignments.findIndex(a => a.subject === subject);
-                if (existingAssgnIdx >= 0) {
-                    existingAssignments[existingAssgnIdx] = { subject, batch, type: subObj.type };
-                } else {
-                    existingAssignments.push({ subject, batch, type: subObj.type });
+            if (teacher) {
+                // Multi-subject assignment support
+                if (!teacher.assignments) {
+                    teacher.assignments = [{ subject: teacher.subject, batch: teacher.batch, type: subObj ? subObj.type : 'Theory' }];
                 }
-
-                SYSTEM_TEACHERS[index] = {
-                    name, email, password,
-                    dept: loggedInUser.dept,
-                    assignments: existingAssignments
-                };
-                alert(`✅ Faculty assignments updated for ${name}!`);
-            } else if (existingTeacherIndex >= 0) {
-                // Teacher exists, append new subject assignment!
-                const teacherObj = SYSTEM_TEACHERS[existingTeacherIndex];
-                if (!teacherObj.assignments) teacherObj.assignments = [];
-
-                if (teacherObj.assignments.some(a => a.subject === subject)) {
-                    alert(`⚠️ ${name} is already assigned to ${subject}!`);
-                    return;
-                }
-
-                teacherObj.assignments.push({ subject, batch, type: subObj.type });
-                alert(`✅ Appended Subject "${subject}" to existing Faculty ${name}!`);
+                teacher.assignments.push({ subject: subName, batch: batch, type: subObj ? subObj.type : 'Theory' });
+                teacher.name = name;
+                teacher.password = password;
+                alert(`✅ Additional course "${subName}" assigned to ${name}!`);
             } else {
-                // Brand new teacher
                 SYSTEM_TEACHERS.push({
-                    name, email, password,
+                    name,
+                    email,
+                    password,
                     dept: loggedInUser.dept,
-                    assignments: [{ subject, batch, type: subObj.type }]
+                    subject: subName,
+                    batch: batch,
+                    assignments: [{ subject: subName, batch: batch, type: subObj ? subObj.type : 'Theory' }]
                 });
-                alert(`✅ Faculty Credential Created!\nName: ${name}\nSubject: ${subject} (${subObj.type})\nBatch: ${batch}`);
+                alert(`✅ Faculty registered for ${name}!`);
             }
 
-            cancelTeacherEdit();
-            renderHodTeacherList();
+            resetHodTeacherForm();
+            renderHodTeacherTable();
         }
 
-        function editTeacher(index) {
-            const teacher = SYSTEM_TEACHERS[index];
-            document.getElementById('hod-teacher-edit-index').value = index;
-            document.getElementById('hod-teacher-name').value = teacher.name;
-            document.getElementById('hod-teacher-email').value = teacher.email;
-            document.getElementById('hod-teacher-password').value = teacher.password;
-
-            if (teacher.assignments && teacher.assignments.length > 0) {
-                document.getElementById('hod-teacher-subject').value = teacher.assignments[0].subject;
-                handleHodSubjectChange();
-                if (teacher.assignments[0].type === 'Lab') {
-                    document.getElementById('hod-teacher-batch').value = teacher.assignments[0].batch;
-                }
-            }
-
-            document.getElementById('hod-teacher-form-title').children[0].innerHTML = `<i class="fa-solid fa-user-pen"></i> Edit Faculty Credential`;
-            document.getElementById('btn-submit-teacher').innerText = "Update/Append Subject Assignment";
-            document.getElementById('btn-cancel-teacher-edit').classList.remove('hidden');
-        }
-
-        function cancelTeacherEdit() {
-            document.getElementById('hod-teacher-edit-index').value = "-1";
+        function resetHodTeacherForm() {
+            document.getElementById('hod-teacher-index').value = '-1';
             document.getElementById('hod-teacher-name').value = '';
             document.getElementById('hod-teacher-email').value = '';
             document.getElementById('hod-teacher-password').value = '';
-            document.getElementById('hod-teacher-form-title').children[0].innerHTML = `<i class="fa-solid fa-chalkboard-user"></i> Create/Assign Faculty`;
-            document.getElementById('btn-submit-teacher').innerText = "Register/Assign Faculty";
-            document.getElementById('btn-cancel-teacher-edit').classList.add('hidden');
+            document.getElementById('btn-save-teacher').innerText = 'Register / Update Faculty';
+        }
+
+        function editTeacher(index) {
+            const t = SYSTEM_TEACHERS[index];
+            document.getElementById('hod-teacher-index').value = index;
+            document.getElementById('hod-teacher-name').value = t.name;
+            document.getElementById('hod-teacher-email').value = t.email;
+            document.getElementById('hod-teacher-password').value = t.password;
+            document.getElementById('btn-save-teacher').innerText = 'Update Faculty Credentials';
         }
 
         function deleteTeacher(index) {
-            if (confirm(`Are you sure you want to delete Faculty ${SYSTEM_TEACHERS[index].name}?`)) {
+            if (confirm("Are you sure you want to remove this faculty?")) {
                 SYSTEM_TEACHERS.splice(index, 1);
-                renderHodTeacherList();
+                renderHodTeacherTable();
             }
         }
 
-        function renderHodTeacherList() {
-            const container = document.getElementById('hod-teacher-list');
-            if (!container || !loggedInUser) return;
+        function renderHodTeacherTable() {
+            const tbody = document.getElementById('table-hod-teachers');
+            tbody.innerHTML = '';
             const deptTeachers = SYSTEM_TEACHERS.filter(t => t.dept === loggedInUser.dept);
 
-            if (deptTeachers.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-500 italic">No faculty added yet.</p>`;
-                return;
-            }
-
-            container.innerHTML = '';
-            deptTeachers.forEach((t) => {
-                const globalIndex = SYSTEM_TEACHERS.findIndex(gt => gt.email === t.email);
-                const subTags = (t.assignments || []).map(a => `${a.subject} (${a.type === 'Theory' ? 'Full Class' : a.batch})`).join(', ');
-
-                container.innerHTML += `
-                    <div class="p-2 bg-neoPink/20 neo-border flex items-center justify-between font-bold text-xs">
-                        <div>
-                            <span class="block font-black">${t.name}</span>
-                            <span class="text-[10px] text-slate-800 block">📚 ${subTags || 'No subjects'}</span>
-                            <span class="text-[10px] text-slate-600 font-mono">${t.email}</span>
-                        </div>
-                        <div class="flex gap-1">
-                            <button onclick="editTeacher(${globalIndex})" class="neo-btn bg-neoYellow px-2 py-0.5 text-[10px] uppercase font-black">Edit</button>
-                            <button onclick="deleteTeacher(${globalIndex})" class="neo-btn bg-neoRed text-white px-2 py-0.5 text-[10px] uppercase font-black">Del</button>
-                        </div>
-                    </div>
+            deptTeachers.forEach((t, idx) => {
+                const courseList = t.assignments ? t.assignments.map(a => `${a.subject} (${a.batch})`).join(', ') : `${t.subject} (${t.batch})`;
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="p-2 border-r-2 border-black font-black">${t.name}</td>
+                        <td class="p-2 border-r-2 border-black">${t.email}</td>
+                        <td class="p-2 border-r-2 border-black">${courseList}</td>
+                        <td class="p-2 space-x-1">
+                            <button onclick="editTeacher(${idx})" class="neo-btn bg-neoCyan px-1.5 py-0.5 text-[10px]">Edit</button>
+                            <button onclick="deleteTeacher(${idx})" class="neo-btn bg-neoOrange text-white px-1.5 py-0.5 text-[10px]">Del</button>
+                        </td>
+                    </tr>
                 `;
             });
         }
 
-        // Workspace Launchers
+        // Launch Dashboards Safely
         function launchPortal(role) {
             document.getElementById('section-auth').classList.add('hidden');
             document.getElementById('nav-user-info').classList.remove('hidden');
@@ -1115,9 +1008,10 @@
                 document.getElementById('section-admin').classList.remove('hidden');
                 roleBadge.innerText = 'Admin';
                 document.getElementById('nav-user-name').innerText = loggedInUser.name;
-                document.getElementById('nav-user-id').innerText = "(System Control)";
-                renderAdminHodList();
-                renderAdminTpoList();
+                document.getElementById('nav-user-id').innerText = "(Super Control)";
+
+                renderAdminHodTable();
+                renderAdminTpoTable();
             } else if (role === 'hod') {
                 document.getElementById('section-hod').classList.remove('hidden');
                 roleBadge.innerText = 'HOD';
@@ -1125,9 +1019,9 @@
                 document.getElementById('nav-user-id').innerText = `(${loggedInUser.dept})`;
                 document.getElementById('hod-dept-title').innerText = `HOD DASHBOARD — ${loggedInUser.dept}`;
 
-                renderHodSubjectLists();
+                populateHodSubjectDropdown();
+                renderHodTeacherTable();
                 renderHodStudentRoster();
-                renderHodTeacherList();
             } else if (role === 'student') {
                 document.getElementById('section-student').classList.remove('hidden');
                 roleBadge.innerText = 'Student';
@@ -1144,8 +1038,7 @@
                 document.getElementById('nav-user-id').innerText = `(${loggedInUser.dept})`;
                 document.getElementById('teacher-profile-name').innerText = loggedInUser.name.toUpperCase();
 
-                activeTeacherSubjectIndex = 0;
-                setupTeacherSubjectSelector();
+                populateTeacherSubjectSelector();
                 renderTeacherView();
             } else if (role === 'tpo') {
                 document.getElementById('section-tpo').classList.remove('hidden');
@@ -1157,6 +1050,27 @@
             }
         }
 
+        function populateTeacherSubjectSelector() {
+            const select = document.getElementById('teacher-active-subject-select');
+            select.innerHTML = '';
+            const assignments = loggedInUser.assignments || [{ subject: loggedInUser.subject, batch: loggedInUser.batch }];
+
+            assignments.forEach((a, idx) => {
+                select.innerHTML += `<option value="${idx}">${a.subject} (${a.batch})</option>`;
+            });
+
+            handleTeacherSubjectChange();
+        }
+
+        function handleTeacherSubjectChange() {
+            const select = document.getElementById('teacher-active-subject-select');
+            const assignments = loggedInUser.assignments || [{ subject: loggedInUser.subject, batch: loggedInUser.batch }];
+            const active = assignments[select.value || 0];
+
+            document.getElementById('teacher-profile-sub').innerText = `Active Course: ${active.subject} • Target: ${active.batch}`;
+            renderTeacherView();
+        }
+
         function logoutUser() {
             document.getElementById('section-auth').classList.remove('hidden');
             document.getElementById('nav-user-info').classList.add('hidden');
@@ -1165,197 +1079,105 @@
             document.getElementById('section-student').classList.add('hidden');
             document.getElementById('section-teacher').classList.add('hidden');
             document.getElementById('section-tpo').classList.add('hidden');
-            setAuthRole('student');
         }
 
-        // Setup Teacher Subject Selector Dropdown
-        function setupTeacherSubjectSelector() {
-            const dropdown = document.getElementById('teacher-subject-dropdown');
-            dropdown.innerHTML = '';
-
-            const assignments = loggedInUser.assignments || [];
-
-            if (assignments.length === 0) {
-                dropdown.innerHTML = `<option value="0">No Subjects Assigned</option>`;
-                document.getElementById('teacher-profile-sub').innerText = `Assigned Subject: None • Mentor Batch: Unassigned`;
-                return;
-            }
-
-            assignments.forEach((a, idx) => {
-                dropdown.innerHTML += `
-                    <option value="${idx}">${a.subject} (${a.type === 'Theory' ? 'Full Class Theory' : 'Batch ' + a.batch})</option>
-                `;
-            });
-
-            handleTeacherSelectSubject(0);
-        }
-
-        function handleTeacherSelectSubject(indexStr) {
-            activeTeacherSubjectIndex = parseInt(indexStr);
-            const assignments = loggedInUser.assignments || [];
-            if (assignments.length === 0) return;
-
-            const activeAssgn = assignments[activeTeacherSubjectIndex];
-            document.getElementById('teacher-profile-sub').innerText = `Assigned Subject: ${activeAssgn.subject} (${activeAssgn.type}) • Mentor Batch: ${activeAssgn.batch}`;
-            document.getElementById('teacher-dashboard-heading').innerText = `Marks Entry for ${activeAssgn.subject} [${activeAssgn.type === 'Theory' ? 'Full Class' : 'Batch ' + activeAssgn.batch}]`;
-
-            renderTeacherView();
-        }
-
-        // HOD Student Roster Render
         function renderHodStudentRoster() {
             const tbody = document.getElementById('table-hod-students');
-            const badge = document.getElementById('hod-student-count-badge');
             tbody.innerHTML = '';
-
             const deptStudents = SYSTEM_STUDENTS.filter(s => s.branch === loggedInUser.dept);
-            badge.innerText = `Total: ${deptStudents.length} Students`;
-
-            if (deptStudents.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500 italic">No students registered in this department yet.</td></tr>`;
-                return;
-            }
 
             deptStudents.forEach(s => {
                 tbody.innerHTML += `
-                    <tr class="hover:bg-neoYellow/20">
-                        <td class="p-2.5 border-r-2 border-black font-black">${s.name} (${s.roll})</td>
-                        <td class="p-2.5 border-r-2 border-black">${s.branch}</td>
-                        <td class="p-2.5 border-r-2 border-black font-black text-neoOrange">${s.batch}</td>
-                        <td class="p-2.5 border-r-2 border-black">${s.mentor}</td>
-                        <td class="p-2.5">
-                            <button onclick="alert('Batch reassigned for ${s.name}')" class="neo-btn bg-neoCyan px-2 py-1 text-[10px] font-black uppercase">Reassign Batch</button>
+                    <tr>
+                        <td class="p-2 border-r-2 border-black font-black">${s.name} (${s.roll})</td>
+                        <td class="p-2 border-r-2 border-black">${s.branch}</td>
+                        <td class="p-2 border-r-2 border-black font-black text-neoOrange">${s.batch}</td>
+                        <td class="p-2">
+                            <button onclick="alert('Batch reassigned')" class="neo-btn bg-neoCyan px-2 py-0.5 text-[10px]">Reassign</button>
                         </td>
                     </tr>
                 `;
             });
         }
 
-        // Student View Render
         function renderStudentView() {
             const table = document.getElementById('table-student-marks');
             table.innerHTML = '';
 
-            document.getElementById('stu-kpi-attendance').innerText = `${loggedInUser.attendance}%`;
-            document.getElementById('stu-kpi-cgpa').innerText = loggedInUser.cgpa.toFixed(2);
-            document.getElementById('stu-kpi-batch').innerText = loggedInUser.batch || 'Batch T1';
-            document.getElementById('stu-kpi-mentor').innerText = `Mentor: ${loggedInUser.mentor || 'Unassigned'}`;
-            document.getElementById('stu-kpi-skills').innerText = (loggedInUser.skills || []).length;
-
-            if (!loggedInUser.marks || loggedInUser.marks.length === 0) {
-                table.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-500 italic">No marks uploaded by faculty yet.</td></tr>`;
-            } else {
-                loggedInUser.marks.forEach(m => {
-                    const totalPct = Math.round(((m.se1 + m.se2 + m.see + m.internal + m.viva) / 200) * 100);
-                    table.innerHTML += `
-                        <tr class="hover:bg-neoYellow/20">
-                            <td class="p-3 border-r-2 border-black font-black">${m.subject}</td>
-                            <td class="p-3 border-r-2 border-black">${m.se1}</td>
-                            <td class="p-3 border-r-2 border-black">${m.se2}</td>
-                            <td class="p-3 border-r-2 border-black">${m.see}</td>
-                            <td class="p-3 border-r-2 border-black">${m.internal}</td>
-                            <td class="p-3 border-r-2 border-black">${m.viva}</td>
-                            <td class="p-3 border-r-2 border-black font-black text-blue-600">${totalPct}%</td>
-                            <td class="p-3"><span class="badge-tag bg-neoGreen px-2 py-0.5 text-[10px] font-bold">Passed</span></td>
-                        </tr>
-                    `;
-                });
-            }
-
-            const skillsList = document.getElementById('student-skills-list');
-            skillsList.innerHTML = '';
-            (loggedInUser.skills || []).forEach(s => {
-                skillsList.innerHTML += `
-                    <div class="p-2 bg-neoYellow/20 neo-border text-xs font-bold flex justify-between items-center">
-                        <span><i class="fa-solid fa-check-circle text-neoGreen mr-1.5"></i> ${s}</span>
-                        <span class="badge-tag bg-white px-2 py-0.5 text-[10px]">Verified</span>
-                    </div>
+            loggedInUser.marks.forEach(m => {
+                const totalPct = Math.round(((m.se1 + m.se2 + m.see + m.internal + m.viva) / 200) * 100);
+                table.innerHTML += `
+                    <tr>
+                        <td class="p-3 border-r-2 border-black font-black">${m.subject}</td>
+                        <td class="p-3 border-r-2 border-black">${m.se1}</td>
+                        <td class="p-3 border-r-2 border-black">${m.se2}</td>
+                        <td class="p-3 border-r-2 border-black">${m.see}</td>
+                        <td class="p-3 border-r-2 border-black">${m.internal}</td>
+                        <td class="p-3 border-r-2 border-black">${m.viva}</td>
+                        <td class="p-3 border-r-2 border-black font-black text-blue-600">${totalPct}%</td>
+                        <td class="p-3"><span class="badge-tag bg-neoGreen px-2 py-0.5 text-[10px]">Passed</span></td>
+                    </tr>
                 `;
             });
         }
 
-        // Teacher View Render (Supports filtering by active selected subject/batch)
         function renderTeacherView() {
             const tbody = document.getElementById('table-teacher-entry');
             tbody.innerHTML = '';
 
-            const assignments = loggedInUser.assignments || [];
-            if (assignments.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-500 italic">No subject assignments found for this teacher.</td></tr>`;
-                return;
-            }
+            const select = document.getElementById('teacher-active-subject-select');
+            const assignments = loggedInUser.assignments || [{ subject: loggedInUser.subject, batch: loggedInUser.batch }];
+            const active = assignments[select.value || 0] || assignments[0];
 
-            const activeAssgn = assignments[activeTeacherSubjectIndex] || assignments[0];
             let branchStudents = SYSTEM_STUDENTS.filter(s => s.branch === loggedInUser.dept);
-
-            // Filter by batch if practical/lab, else show full class for theory
-            if (activeAssgn.type === 'Lab' && activeAssgn.batch !== 'ALL') {
-                branchStudents = branchStudents.filter(s => s.batch === activeAssgn.batch);
-            }
-
-            if (branchStudents.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-500 italic">No students found for subject ${activeAssgn.subject} (${activeAssgn.batch}).</td></tr>`;
-                return;
+            if (active.batch !== 'All Class (Theory)') {
+                branchStudents = branchStudents.filter(s => s.batch === active.batch);
             }
 
             branchStudents.forEach(s => {
-                const subMark = (s.marks || []).find(m => m.subject === activeAssgn.subject) || { se1: 0, se2: 0, see: 0, internal: 0, viva: 0 };
-                const isMyMentee = s.batch === activeAssgn.batch;
-
+                const m = s.marks.find(mk => mk.subject === active.subject) || { se1: 0, se2: 0, see: 0, internal: 0, viva: 0 };
                 tbody.innerHTML += `
-                    <tr class="${isMyMentee ? 'bg-neoGreen/10' : ''} hover:bg-neoPink/10">
-                        <td class="p-2.5 border-r-2 border-black">
-                            <span class="font-black text-black block">${s.name}</span>
-                            <span class="font-mono text-[10px] text-slate-600">${s.roll}</span>
-                        </td>
-                        <td class="p-2.5 border-r-2 border-black font-black">${s.batch} ${isMyMentee ? '(Mentee)' : ''}</td>
-                        <td class="p-2.5 border-r-2 border-black"><input type="number" value="${subMark.se1}" max="25" class="w-12 neo-border p-1 text-center font-bold"></td>
-                        <td class="p-2.5 border-r-2 border-black"><input type="number" value="${subMark.se2}" max="25" class="w-12 neo-border p-1 text-center font-bold"></td>
-                        <td class="p-2.5 border-r-2 border-black"><input type="number" value="${subMark.see}" max="50" class="w-12 neo-border p-1 text-center font-bold"></td>
-                        <td class="p-2.5 border-r-2 border-black"><input type="number" value="${subMark.internal}" max="50" class="w-12 neo-border p-1 text-center font-bold"></td>
-                        <td class="p-2.5 border-r-2 border-black"><input type="number" value="${subMark.viva}" max="50" class="w-12 neo-border p-1 text-center font-bold"></td>
+                    <tr>
+                        <td class="p-2.5 border-r-2 border-black font-black">${s.name} (${s.roll})</td>
+                        <td class="p-2.5 border-r-2 border-black font-black">${s.batch}</td>
+                        <td class="p-2.5 border-r-2 border-black"><input type="number" value="${m.se1}" max="25" class="w-12 neo-border p-1 text-center font-bold"></td>
+                        <td class="p-2.5 border-r-2 border-black"><input type="number" value="${m.se2}" max="25" class="w-12 neo-border p-1 text-center font-bold"></td>
+                        <td class="p-2.5 border-r-2 border-black"><input type="number" value="${m.see}" max="50" class="w-12 neo-border p-1 text-center font-bold"></td>
+                        <td class="p-2.5 border-r-2 border-black"><input type="number" value="${m.internal}" max="50" class="w-12 neo-border p-1 text-center font-bold"></td>
+                        <td class="p-2.5 border-r-2 border-black"><input type="number" value="${m.viva}" max="50" class="w-12 neo-border p-1 text-center font-bold"></td>
                         <td class="p-2.5">
-                            <button onclick="alert('Marks Updated for ${s.name} in ${activeAssgn.subject}')" class="neo-btn bg-neoYellow px-2 py-1 text-[10px] font-black uppercase">Save Marks</button>
+                            <button onclick="alert('Marks Saved')" class="neo-btn bg-neoYellow px-2 py-1 text-[10px] font-black uppercase">Save</button>
                         </td>
                     </tr>
                 `;
             });
         }
 
-        // TPO View Render
         function renderTpoView() {
             const tbody = document.getElementById('table-tpo-cohort');
             tbody.innerHTML = '';
 
-            if (SYSTEM_STUDENTS.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500 italic">No registered students in placement cohort.</td></tr>`;
-                return;
-            }
-
             SYSTEM_STUDENTS.forEach(s => {
                 tbody.innerHTML += `
-                    <tr class="hover:bg-neoGreen/10">
+                    <tr>
                         <td class="p-2.5 border-r-2 border-black font-black">${s.name} (${s.roll})</td>
                         <td class="p-2.5 border-r-2 border-black font-bold">${s.branch}</td>
-                        <td class="p-2.5 border-r-2 border-black font-mono">${s.cgpa.toFixed(2)}</td>
+                        <td class="p-2.5 border-r-2 border-black font-mono">${s.cgpa}</td>
                         <td class="p-2.5 border-r-2 border-black font-mono">${s.attendance}%</td>
-                        <td class="p-2.5 border-r-2 border-black"><span class="badge-tag bg-neoGreen px-2 py-0.5 text-[10px] font-bold">LOW RISK</span></td>
-                        <td class="p-2.5 font-bold text-neoGreen">Eligible for Tier-1 Drives</td>
+                        <td class="p-2.5 font-bold text-neoGreen">Eligible for Drives</td>
                     </tr>
                 `;
             });
         }
 
-        // Monthly PDF Generation
         function downloadStudentMonthlyReport() {
-            if (!loggedInUser) return;
             document.getElementById('pdf-stu-name').innerText = loggedInUser.name;
             document.getElementById('pdf-stu-roll').innerText = loggedInUser.roll;
             document.getElementById('pdf-stu-branch').innerText = loggedInUser.branch;
 
             const pdfMarks = document.getElementById('pdf-table-marks');
             pdfMarks.innerHTML = '';
-            (loggedInUser.marks || []).forEach(m => {
+            loggedInUser.marks.forEach(m => {
                 pdfMarks.innerHTML += `
                     <tr class="border-b border-black">
                         <td class="p-1 border-r border-black font-bold">${m.subject}</td>
@@ -1381,7 +1203,6 @@
             });
         }
 
-        // App Initialization
         window.onload = function() {
             setAuthRole('student');
         }
