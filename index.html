@@ -1559,12 +1559,37 @@
         window.renderStudentView = renderStudentView;
         window.saveStudentMarks = saveStudentMarks;
 
-        // Initialize App & Auto-Restore Active User Session
+        // GLOBAL LOGOUT FUNCTION
+        function logoutUser() {
+            loggedInUser = null;
+            window.loggedInUser = null;
+            currentRole = 'student';
+            window.currentRole = 'student';
+
+            // Clear active session from localStorage
+            localStorage.removeItem('edex_session');
+
+            // Hide all panels & show auth screen
+            document.getElementById('nav-user-info').classList.add('hidden');
+            document.getElementById('section-admin').classList.add('hidden');
+            document.getElementById('section-hod').classList.add('hidden');
+            document.getElementById('section-student').classList.add('hidden');
+            document.getElementById('section-teacher').classList.add('hidden');
+            document.getElementById('section-tpo').classList.add('hidden');
+            document.getElementById('section-auth').classList.remove('hidden');
+
+            setAuthRole('student');
+        }
+        window.logoutUser = logoutUser;
+
+        // Initialize App & Auto-Restore Active User Session Across Page Refreshes
         window.onload = function() {
             const savedSession = dbGet('session', null);
             if (savedSession && savedSession.role && savedSession.user) {
                 loggedInUser = savedSession.user;
                 window.loggedInUser = loggedInUser;
+                currentRole = savedSession.role;
+                window.currentRole = currentRole;
                 launchPortal(savedSession.role);
             } else {
                 setAuthRole('student');
