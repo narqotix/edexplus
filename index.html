@@ -188,7 +188,7 @@
         </section>
 
         <!-- ========================================== -->
-        <!-- VIEW 2: SYSTEM ADMIN PANEL (/admin) -->
+        <!-- VIEW 2: SYSTEM ADMIN PANEL -->
         <!-- ========================================== -->
         <section id="section-admin" class="hidden space-y-6">
             <div class="bg-neoYellow neo-border-lg p-5 shadow-neo-lg flex items-center justify-between">
@@ -563,14 +563,28 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT APPLICATION ARCHITECTURE -->
+    <!-- JAVASCRIPT LOCALSTORAGE PERSISTENT ENGINE -->
     <script>
-        // System Databases
+        // LocalStorage Engine Helpers
+        function dbGet(key, defaultVal) {
+            try {
+                const data = localStorage.getItem('edex_' + key);
+                return data ? JSON.parse(data) : defaultVal;
+            } catch (e) {
+                return defaultVal;
+            }
+        }
+
+        function dbSet(key, value) {
+            localStorage.setItem('edex_' + key, JSON.stringify(value));
+        }
+
+        // Global Application State Variables
         let currentRole = 'student';
         let loggedInUser = null;
 
-        // Dynamic Subjects DB per Department
-        const DEPT_SUBJECTS = {
+        // Persistent Dynamic DBs initialized from localStorage
+        let DEPT_SUBJECTS = dbGet('dept_subjects', {
             'CSE (AI-DS)': [
                 { name: 'Data Structures & Algorithms', type: 'Theory' },
                 { name: 'DBMS Lab', type: 'Lab' }
@@ -579,21 +593,28 @@
                 { name: 'Deep Learning', type: 'Theory' },
                 { name: 'Computer Vision Lab', type: 'Lab' }
             ]
-        };
+        });
 
-        // ONLY Super Admin is predefined
         const SUPER_ADMIN = {
             email: 'admin@edexplus.com',
             password: 'edexplus@112233'
         };
 
-        // All other databases start EMPTY
-        const SYSTEM_HODS = [];
-        const SYSTEM_TPOS = [];
-        const SYSTEM_TEACHERS = [];
-        const SYSTEM_STUDENTS = [];
+        let SYSTEM_HODS = dbGet('hods', []);
+        let SYSTEM_TPOS = dbGet('tpos', []);
+        let SYSTEM_TEACHERS = dbGet('teachers', []);
+        let SYSTEM_STUDENTS = dbGet('students', []);
 
-        // Auth Role Selector Tab Switching
+        // Sync local DB updates
+        function syncDB() {
+            dbSet('dept_subjects', DEPT_SUBJECTS);
+            dbSet('hods', SYSTEM_HODS);
+            dbSet('tpos', SYSTEM_TPOS);
+            dbSet('teachers', SYSTEM_TEACHERS);
+            dbSet('students', SYSTEM_STUDENTS);
+        }
+
+        // Auth Role Tab Switching
         function setAuthRole(role) {
             currentRole = role;
             document.querySelectorAll('#btn-tab-student, #btn-tab-teacher, #btn-tab-hod, #btn-tab-tpo, #btn-tab-admin').forEach(btn => {
@@ -679,533 +700,4 @@
                 }
                 loggedInUser = teacher;
                 launchPortal('teacher');
-            } else if (currentRole === 'tpo') {
-                const tpo = SYSTEM_TPOS.find(t => t.email.toLowerCase() === email && t.password === password);
-                if (!tpo) {
-                    alert("⛔ Invalid TPO Credentials!");
-                    return;
-                }
-                loggedInUser = tpo;
-                launchPortal('tpo');
-            } else if (currentRole === 'student') {
-                const student = SYSTEM_STUDENTS.find(s => s.email.toLowerCase() === email && s.password === password);
-                if (!student) {
-                    alert("⛔ Student not found! Please complete Student Sign Up first.");
-                    return;
-                }
-                loggedInUser = student;
-                launchPortal('student');
-            }
-        }
-
-        // Student Self Signup
-        function handleStudentSignup(e) {
-            e.preventDefault();
-            const name = document.getElementById('signup-name').value.trim();
-            const roll = document.getElementById('signup-roll').value.trim().toUpperCase();
-            const branch = document.getElementById('signup-branch').value;
-            const email = document.getElementById('signup-email').value.trim().toLowerCase();
-            const password = document.getElementById('signup-password').value;
-
-            if (!email.startsWith('24uad')) {
-                alert("⚠️ Student Email must follow strict pattern: 24UADxxx@dkte.ac.in");
-                return;
-            }
-
-            const defaultSubjects = DEPT_SUBJECTS[branch] || [];
-            const defaultMarks = defaultSubjects.map(sub => ({ subject: sub.name, se1: 0, se2: 0, see: 0, internal: 0, viva: 0 }));
-
-            const newStudent = {
-                roll: roll,
-                name: name,
-                email: email,
-                password: password,
-                branch: branch,
-                batch: 'T1',
-                attendance: 80.0,
-                cgpa: 7.50,
-                marks: defaultMarks,
-                skills: ['Registered in Semester V (2026)']
-            };
-
-            SYSTEM_STUDENTS.push(newStudent);
-            alert(`✅ Signup Successful! Welcome ${name}. Please Login now.`);
-            toggleSignupMode(false);
-        }
-
-        // Admin Save/Edit HOD & TPO
-        function handleSaveHOD(e) {
-            e.preventDefault();
-            const index = parseInt(document.getElementById('admin-hod-index').value);
-            const name = document.getElementById('admin-hod-name').value.trim();
-            const dept = document.getElementById('admin-hod-dept').value;
-            const email = document.getElementById('admin-hod-email').value.trim().toLowerCase();
-            const password = document.getElementById('admin-hod-password').value;
-
-            if (index === -1) {
-                SYSTEM_HODS.push({ name, dept, email, password });
-                alert(`✅ HOD Credential created for ${name}!`);
-            } else {
-                SYSTEM_HODS[index] = { name, dept, email, password };
-                alert(`✅ HOD Credential updated for ${name}!`);
-            }
-
-            resetAdminHodForm();
-            renderAdminHodTable();
-        }
-
-        function resetAdminHodForm() {
-            document.getElementById('admin-hod-index').value = '-1';
-            document.getElementById('admin-hod-name').value = '';
-            document.getElementById('admin-hod-email').value = '';
-            document.getElementById('admin-hod-password').value = '';
-            document.getElementById('btn-save-hod').innerText = 'Register HOD Credential';
-        }
-
-        function editHod(index) {
-            const h = SYSTEM_HODS[index];
-            document.getElementById('admin-hod-index').value = index;
-            document.getElementById('admin-hod-name').value = h.name;
-            document.getElementById('admin-hod-dept').value = h.dept;
-            document.getElementById('admin-hod-email').value = h.email;
-            document.getElementById('admin-hod-password').value = h.password;
-            document.getElementById('btn-save-hod').innerText = 'Update HOD Credential';
-        }
-
-        function deleteHod(index) {
-            if (confirm("Are you sure you want to delete this HOD credential?")) {
-                SYSTEM_HODS.splice(index, 1);
-                renderAdminHodTable();
-            }
-        }
-
-        function renderAdminHodTable() {
-            const tbody = document.getElementById('table-admin-hods');
-            tbody.innerHTML = '';
-            SYSTEM_HODS.forEach((h, idx) => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="p-1.5 border-r border-black">${h.name}</td>
-                        <td class="p-1.5 border-r border-black">${h.dept}</td>
-                        <td class="p-1.5 border-r border-black">${h.email}</td>
-                        <td class="p-1.5 space-x-1">
-                            <button onclick="editHod(${idx})" class="neo-btn bg-neoCyan px-1.5 py-0.5 text-[10px]">Edit</button>
-                            <button onclick="deleteHod(${idx})" class="neo-btn bg-neoOrange text-white px-1.5 py-0.5 text-[10px]">Del</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        function handleSaveTPO(e) {
-            e.preventDefault();
-            const index = parseInt(document.getElementById('admin-tpo-index').value);
-            const name = document.getElementById('admin-tpo-name').value.trim();
-            const email = document.getElementById('admin-tpo-email').value.trim().toLowerCase();
-            const password = document.getElementById('admin-tpo-password').value;
-
-            if (index === -1) {
-                SYSTEM_TPOS.push({ name, email, password });
-                alert(`✅ TPO Credential created for ${name}!`);
-            } else {
-                SYSTEM_TPOS[index] = { name, email, password };
-                alert(`✅ TPO Credential updated for ${name}!`);
-            }
-
-            resetAdminTpoForm();
-            renderAdminTpoTable();
-        }
-
-        function resetAdminTpoForm() {
-            document.getElementById('admin-tpo-index').value = '-1';
-            document.getElementById('admin-tpo-name').value = '';
-            document.getElementById('admin-tpo-email').value = '';
-            document.getElementById('admin-tpo-password').value = '';
-            document.getElementById('btn-save-tpo').innerText = 'Register TPO Credential';
-        }
-
-        function editTpo(index) {
-            const t = SYSTEM_TPOS[index];
-            document.getElementById('admin-tpo-index').value = index;
-            document.getElementById('admin-tpo-name').value = t.name;
-            document.getElementById('admin-tpo-email').value = t.email;
-            document.getElementById('admin-tpo-password').value = t.password;
-            document.getElementById('btn-save-tpo').innerText = 'Update TPO Credential';
-        }
-
-        function deleteTpo(index) {
-            if (confirm("Are you sure you want to delete this TPO credential?")) {
-                SYSTEM_TPOS.splice(index, 1);
-                renderAdminTpoTable();
-            }
-        }
-
-        function renderAdminTpoTable() {
-            const tbody = document.getElementById('table-admin-tpos');
-            tbody.innerHTML = '';
-            SYSTEM_TPOS.forEach((t, idx) => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="p-1.5 border-r border-black">${t.name}</td>
-                        <td class="p-1.5 border-r border-black">${t.email}</td>
-                        <td class="p-1.5 space-x-1">
-                            <button onclick="editTpo(${idx})" class="neo-btn bg-neoCyan px-1.5 py-0.5 text-[10px]">Edit</button>
-                            <button onclick="deleteTpo(${idx})" class="neo-btn bg-neoOrange text-white px-1.5 py-0.5 text-[10px]">Del</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        // HOD Subject & Faculty Management
-        function handleAddDepartmentSubject(e) {
-            e.preventDefault();
-            const subName = document.getElementById('hod-subject-name').value.trim();
-            const subType = document.getElementById('hod-subject-type').value;
-
-            if (!DEPT_SUBJECTS[loggedInUser.dept]) {
-                DEPT_SUBJECTS[loggedInUser.dept] = [];
-            }
-
-            DEPT_SUBJECTS[loggedInUser.dept].push({ name: subName, type: subType });
-            alert(`✅ Subject "${subName}" (${subType}) added to ${loggedInUser.dept}!`);
-
-            document.getElementById('hod-subject-name').value = '';
-            populateHodSubjectDropdown();
-        }
-
-        function populateHodSubjectDropdown() {
-            const subSelect = document.getElementById('hod-teacher-subject');
-            subSelect.innerHTML = '';
-            const subjects = DEPT_SUBJECTS[loggedInUser.dept] || [];
-
-            subjects.forEach(s => {
-                subSelect.innerHTML += `<option value="${s.name}" data-type="${s.type}">${s.name} (${s.type})</option>`;
-            });
-
-            handleHodSubjectSelectionChange();
-        }
-
-        function handleHodSubjectSelectionChange() {
-            const subSelect = document.getElementById('hod-teacher-subject');
-            if (!subSelect.options.length) return;
-
-            const selectedOption = subSelect.options[subSelect.selectedIndex];
-            const subType = selectedOption.getAttribute('data-type');
-            const batchWrapper = document.getElementById('hod-batch-selection-wrapper');
-
-            if (subType === 'Theory') {
-                batchWrapper.style.display = 'none';
-            } else {
-                batchWrapper.style.display = 'block';
-            }
-        }
-
-        function handleHodSaveTeacher(e) {
-            e.preventDefault();
-            const index = parseInt(document.getElementById('hod-teacher-index').value);
-            const name = document.getElementById('hod-teacher-name').value.trim();
-            const email = document.getElementById('hod-teacher-email').value.trim().toLowerCase();
-            const password = document.getElementById('hod-teacher-password').value;
-            const subName = document.getElementById('hod-teacher-subject').value;
-
-            const subObj = (DEPT_SUBJECTS[loggedInUser.dept] || []).find(s => s.name === subName);
-            const isLab = subObj && subObj.type === 'Lab';
-            const batch = isLab ? document.getElementById('hod-teacher-batch').value : 'All Class (Theory)';
-
-            if (email.startsWith('24uad')) {
-                alert("⛔ Cannot assign student email to faculty!");
-                return;
-            }
-
-            let teacher = SYSTEM_TEACHERS.find(t => t.email === email);
-
-            if (teacher) {
-                // Multi-subject assignment support
-                if (!teacher.assignments) {
-                    teacher.assignments = [{ subject: teacher.subject, batch: teacher.batch, type: subObj ? subObj.type : 'Theory' }];
-                }
-                teacher.assignments.push({ subject: subName, batch: batch, type: subObj ? subObj.type : 'Theory' });
-                teacher.name = name;
-                teacher.password = password;
-                alert(`✅ Additional course "${subName}" assigned to ${name}!`);
-            } else {
-                SYSTEM_TEACHERS.push({
-                    name,
-                    email,
-                    password,
-                    dept: loggedInUser.dept,
-                    subject: subName,
-                    batch: batch,
-                    assignments: [{ subject: subName, batch: batch, type: subObj ? subObj.type : 'Theory' }]
-                });
-                alert(`✅ Faculty registered for ${name}!`);
-            }
-
-            resetHodTeacherForm();
-            renderHodTeacherTable();
-        }
-
-        function resetHodTeacherForm() {
-            document.getElementById('hod-teacher-index').value = '-1';
-            document.getElementById('hod-teacher-name').value = '';
-            document.getElementById('hod-teacher-email').value = '';
-            document.getElementById('hod-teacher-password').value = '';
-            document.getElementById('btn-save-teacher').innerText = 'Register / Update Faculty';
-        }
-
-        function editTeacher(index) {
-            const t = SYSTEM_TEACHERS[index];
-            document.getElementById('hod-teacher-index').value = index;
-            document.getElementById('hod-teacher-name').value = t.name;
-            document.getElementById('hod-teacher-email').value = t.email;
-            document.getElementById('hod-teacher-password').value = t.password;
-            document.getElementById('btn-save-teacher').innerText = 'Update Faculty Credentials';
-        }
-
-        function deleteTeacher(index) {
-            if (confirm("Are you sure you want to remove this faculty?")) {
-                SYSTEM_TEACHERS.splice(index, 1);
-                renderHodTeacherTable();
-            }
-        }
-
-        function renderHodTeacherTable() {
-            const tbody = document.getElementById('table-hod-teachers');
-            tbody.innerHTML = '';
-            const deptTeachers = SYSTEM_TEACHERS.filter(t => t.dept === loggedInUser.dept);
-
-            deptTeachers.forEach((t, idx) => {
-                const courseList = t.assignments ? t.assignments.map(a => `${a.subject} (${a.batch})`).join(', ') : `${t.subject} (${t.batch})`;
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="p-2 border-r-2 border-black font-black">${t.name}</td>
-                        <td class="p-2 border-r-2 border-black">${t.email}</td>
-                        <td class="p-2 border-r-2 border-black">${courseList}</td>
-                        <td class="p-2 space-x-1">
-                            <button onclick="editTeacher(${idx})" class="neo-btn bg-neoCyan px-1.5 py-0.5 text-[10px]">Edit</button>
-                            <button onclick="deleteTeacher(${idx})" class="neo-btn bg-neoOrange text-white px-1.5 py-0.5 text-[10px]">Del</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        // Launch Dashboards Safely
-        function launchPortal(role) {
-            document.getElementById('section-auth').classList.add('hidden');
-            document.getElementById('nav-user-info').classList.remove('hidden');
-
-            document.getElementById('section-admin').classList.add('hidden');
-            document.getElementById('section-hod').classList.add('hidden');
-            document.getElementById('section-student').classList.add('hidden');
-            document.getElementById('section-teacher').classList.add('hidden');
-            document.getElementById('section-tpo').classList.add('hidden');
-
-            const roleBadge = document.getElementById('nav-user-role');
-
-            if (role === 'admin') {
-                document.getElementById('section-admin').classList.remove('hidden');
-                roleBadge.innerText = 'Admin';
-                document.getElementById('nav-user-name').innerText = loggedInUser.name;
-                document.getElementById('nav-user-id').innerText = "(Super Control)";
-
-                renderAdminHodTable();
-                renderAdminTpoTable();
-            } else if (role === 'hod') {
-                document.getElementById('section-hod').classList.remove('hidden');
-                roleBadge.innerText = 'HOD';
-                document.getElementById('nav-user-name').innerText = loggedInUser.name;
-                document.getElementById('nav-user-id').innerText = `(${loggedInUser.dept})`;
-                document.getElementById('hod-dept-title').innerText = `HOD DASHBOARD — ${loggedInUser.dept}`;
-
-                populateHodSubjectDropdown();
-                renderHodTeacherTable();
-                renderHodStudentRoster();
-            } else if (role === 'student') {
-                document.getElementById('section-student').classList.remove('hidden');
-                roleBadge.innerText = 'Student';
-                document.getElementById('nav-user-name').innerText = loggedInUser.name;
-                document.getElementById('nav-user-id').innerText = `(${loggedInUser.roll})`;
-                document.getElementById('stu-display-name').innerText = `${loggedInUser.name.toUpperCase()} (${loggedInUser.roll})`;
-                document.getElementById('stu-display-dept').innerText = `B.Tech ${loggedInUser.branch} • Semester V (2026)`;
-
-                renderStudentView();
-            } else if (role === 'teacher') {
-                document.getElementById('section-teacher').classList.remove('hidden');
-                roleBadge.innerText = 'Teacher';
-                document.getElementById('nav-user-name').innerText = loggedInUser.name;
-                document.getElementById('nav-user-id').innerText = `(${loggedInUser.dept})`;
-                document.getElementById('teacher-profile-name').innerText = loggedInUser.name.toUpperCase();
-
-                populateTeacherSubjectSelector();
-                renderTeacherView();
-            } else if (role === 'tpo') {
-                document.getElementById('section-tpo').classList.remove('hidden');
-                roleBadge.innerText = 'TPO';
-                document.getElementById('nav-user-name').innerText = loggedInUser.name;
-                document.getElementById('nav-user-id').innerText = "(Placement Cell)";
-
-                renderTpoView();
-            }
-        }
-
-        function populateTeacherSubjectSelector() {
-            const select = document.getElementById('teacher-active-subject-select');
-            select.innerHTML = '';
-            const assignments = loggedInUser.assignments || [{ subject: loggedInUser.subject, batch: loggedInUser.batch }];
-
-            assignments.forEach((a, idx) => {
-                select.innerHTML += `<option value="${idx}">${a.subject} (${a.batch})</option>`;
-            });
-
-            handleTeacherSubjectChange();
-        }
-
-        function handleTeacherSubjectChange() {
-            const select = document.getElementById('teacher-active-subject-select');
-            const assignments = loggedInUser.assignments || [{ subject: loggedInUser.subject, batch: loggedInUser.batch }];
-            const active = assignments[select.value || 0];
-
-            document.getElementById('teacher-profile-sub').innerText = `Active Course: ${active.subject} • Target: ${active.batch}`;
-            renderTeacherView();
-        }
-
-        function logoutUser() {
-            document.getElementById('section-auth').classList.remove('hidden');
-            document.getElementById('nav-user-info').classList.add('hidden');
-            document.getElementById('section-admin').classList.add('hidden');
-            document.getElementById('section-hod').classList.add('hidden');
-            document.getElementById('section-student').classList.add('hidden');
-            document.getElementById('section-teacher').classList.add('hidden');
-            document.getElementById('section-tpo').classList.add('hidden');
-        }
-
-        function renderHodStudentRoster() {
-            const tbody = document.getElementById('table-hod-students');
-            tbody.innerHTML = '';
-            const deptStudents = SYSTEM_STUDENTS.filter(s => s.branch === loggedInUser.dept);
-
-            deptStudents.forEach(s => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="p-2 border-r-2 border-black font-black">${s.name} (${s.roll})</td>
-                        <td class="p-2 border-r-2 border-black">${s.branch}</td>
-                        <td class="p-2 border-r-2 border-black font-black text-neoOrange">${s.batch}</td>
-                        <td class="p-2">
-                            <button onclick="alert('Batch reassigned')" class="neo-btn bg-neoCyan px-2 py-0.5 text-[10px]">Reassign</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        function renderStudentView() {
-            const table = document.getElementById('table-student-marks');
-            table.innerHTML = '';
-
-            loggedInUser.marks.forEach(m => {
-                const totalPct = Math.round(((m.se1 + m.se2 + m.see + m.internal + m.viva) / 200) * 100);
-                table.innerHTML += `
-                    <tr>
-                        <td class="p-3 border-r-2 border-black font-black">${m.subject}</td>
-                        <td class="p-3 border-r-2 border-black">${m.se1}</td>
-                        <td class="p-3 border-r-2 border-black">${m.se2}</td>
-                        <td class="p-3 border-r-2 border-black">${m.see}</td>
-                        <td class="p-3 border-r-2 border-black">${m.internal}</td>
-                        <td class="p-3 border-r-2 border-black">${m.viva}</td>
-                        <td class="p-3 border-r-2 border-black font-black text-blue-600">${totalPct}%</td>
-                        <td class="p-3"><span class="badge-tag bg-neoGreen px-2 py-0.5 text-[10px]">Passed</span></td>
-                    </tr>
-                `;
-            });
-        }
-
-        function renderTeacherView() {
-            const tbody = document.getElementById('table-teacher-entry');
-            tbody.innerHTML = '';
-
-            const select = document.getElementById('teacher-active-subject-select');
-            const assignments = loggedInUser.assignments || [{ subject: loggedInUser.subject, batch: loggedInUser.batch }];
-            const active = assignments[select.value || 0] || assignments[0];
-
-            let branchStudents = SYSTEM_STUDENTS.filter(s => s.branch === loggedInUser.dept);
-            if (active.batch !== 'All Class (Theory)') {
-                branchStudents = branchStudents.filter(s => s.batch === active.batch);
-            }
-
-            branchStudents.forEach(s => {
-                const m = s.marks.find(mk => mk.subject === active.subject) || { se1: 0, se2: 0, see: 0, internal: 0, viva: 0 };
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="p-2.5 border-r-2 border-black font-black">${s.name} (${s.roll})</td>
-                        <td class="p-2.5 border-r-2 border-black font-black">${s.batch}</td>
-                        <td class="p-2.5 border-r-2 border-black"><input type="number" value="${m.se1}" max="25" class="w-12 neo-border p-1 text-center font-bold"></td>
-                        <td class="p-2.5 border-r-2 border-black"><input type="number" value="${m.se2}" max="25" class="w-12 neo-border p-1 text-center font-bold"></td>
-                        <td class="p-2.5 border-r-2 border-black"><input type="number" value="${m.see}" max="50" class="w-12 neo-border p-1 text-center font-bold"></td>
-                        <td class="p-2.5 border-r-2 border-black"><input type="number" value="${m.internal}" max="50" class="w-12 neo-border p-1 text-center font-bold"></td>
-                        <td class="p-2.5 border-r-2 border-black"><input type="number" value="${m.viva}" max="50" class="w-12 neo-border p-1 text-center font-bold"></td>
-                        <td class="p-2.5">
-                            <button onclick="alert('Marks Saved')" class="neo-btn bg-neoYellow px-2 py-1 text-[10px] font-black uppercase">Save</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        function renderTpoView() {
-            const tbody = document.getElementById('table-tpo-cohort');
-            tbody.innerHTML = '';
-
-            SYSTEM_STUDENTS.forEach(s => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="p-2.5 border-r-2 border-black font-black">${s.name} (${s.roll})</td>
-                        <td class="p-2.5 border-r-2 border-black font-bold">${s.branch}</td>
-                        <td class="p-2.5 border-r-2 border-black font-mono">${s.cgpa}</td>
-                        <td class="p-2.5 border-r-2 border-black font-mono">${s.attendance}%</td>
-                        <td class="p-2.5 font-bold text-neoGreen">Eligible for Drives</td>
-                    </tr>
-                `;
-            });
-        }
-
-        function downloadStudentMonthlyReport() {
-            document.getElementById('pdf-stu-name').innerText = loggedInUser.name;
-            document.getElementById('pdf-stu-roll').innerText = loggedInUser.roll;
-            document.getElementById('pdf-stu-branch').innerText = loggedInUser.branch;
-
-            const pdfMarks = document.getElementById('pdf-table-marks');
-            pdfMarks.innerHTML = '';
-            loggedInUser.marks.forEach(m => {
-                pdfMarks.innerHTML += `
-                    <tr class="border-b border-black">
-                        <td class="p-1 border-r border-black font-bold">${m.subject}</td>
-                        <td class="p-1 border-r border-black">${m.se1}/25</td>
-                        <td class="p-1 border-r border-black">${m.se2}/25</td>
-                        <td class="p-1 border-r border-black">${m.see}/50</td>
-                        <td class="p-1 border-r border-black">${m.internal}/50</td>
-                        <td class="p-1">${m.viva}/50</td>
-                    </tr>
-                `;
-            });
-
-            const element = document.getElementById('pdf-report-template');
-            element.classList.remove('hidden');
-
-            html2canvas(element).then(canvas => {
-                const imgData = canvas.toDataURL('image/png');
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF('p', 'mm', 'a4');
-                pdf.addImage(imgData, 'PNG', 10, 10, 190, 0);
-                pdf.save(`EdExPlus_Report_${loggedInUser.roll}.pdf`);
-                element.classList.add('hidden');
-            });
-        }
-
-        window.onload = function() {
-            setAuthRole('student');
-        }
-    </script>
-</body>
-</html>
+            } else
