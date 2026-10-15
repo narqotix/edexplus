@@ -563,7 +563,7 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT LOCALSTORAGE PERSISTENT ENGINE -->
+    <!-- JAVASCRIPT LOCALSTORAGE PERSISTENT & SESSION ENGINE -->
     <script>
         // LocalStorage Engine Helpers
         function dbGet(key, defaultVal) {
@@ -612,6 +612,11 @@
             dbSet('tpos', SYSTEM_TPOS);
             dbSet('teachers', SYSTEM_TEACHERS);
             dbSet('students', SYSTEM_STUDENTS);
+
+            // Also update active session state if user is logged in
+            if (loggedInUser && currentRole) {
+                dbSet('session', { role: currentRole, user: loggedInUser });
+            }
         }
 
         // Auth Role Tab Switching
@@ -666,7 +671,7 @@
             }
         }
 
-        // Handle Login Submission & Security Guardrails
+        // Handle Login Submission & Session Persistence
         function handleAuthLogin(e) {
             e.preventDefault();
             const email = document.getElementById('auth-email').value.trim().toLowerCase();
@@ -680,6 +685,7 @@
             if (currentRole === 'admin') {
                 if (email === SUPER_ADMIN.email.toLowerCase() && password === SUPER_ADMIN.password) {
                     loggedInUser = { name: 'Super Admin', email: email };
+                    dbSet('session', { role: 'admin', user: loggedInUser });
                     launchPortal('admin');
                 } else {
                     alert("⛔ Invalid Admin Credentials!");
@@ -691,6 +697,7 @@
                     return;
                 }
                 loggedInUser = hod;
+                dbSet('session', { role: 'hod', user: loggedInUser });
                 launchPortal('hod');
             } else if (currentRole === 'teacher') {
                 const teacher = SYSTEM_TEACHERS.find(t => t.email.toLowerCase() === email && t.password === password);
@@ -699,5 +706,613 @@
                     return;
                 }
                 loggedInUser = teacher;
+                dbSet('session', { role: 'teacher', user: loggedInUser });
                 launchPortal('teacher');
-            } else
+            } else if (currentRole === 'tpo') {
+                const tpo = SYSTEM_TPOS.find(t => t.email.toLowerCase() === email && t.password === password);
+                if (!tpo) {
+                    alert("⛔ Invalid TPO Credentials!");
+                    return;
+                }
+                loggedInUser = tpo;
+                dbSet('session', { role: 'tpo', user: loggedInUser });
+                launchPortal('tpo');
+            } else if (currentRole === 'student') {
+                const student = SYSTEM_STUDENTS.find(s => s.email.toLowerCase() === email && s.password === password);
+                if (!student) {
+                    alert("⛔ Student not found! Please complete Student Sign Up first.");
+                    return;
+                }
+                loggedInUser = student;
+                dbSet('session', { role: 'student', user: loggedInUser });
+                launchPortal('student');
+            }
+        }
+
+        // Student Self Signup
+        function handleStudentSignup(e) {
+            e.preventDefault();
+            const name = document.getElementById('signup-name').value.trim();
+            const roll = document.getElementById('signup-roll').value.trim().toUpperCase();
+            const branch = document.getElementById('signup-branch').value;
+            const email = document.getElementById('signup-email').value.trim().toLowerCase();
+            const password = document.getElementById('signup-password').value;
+
+            if (!email.startsWith('24uad')) {
+                alert("⚠️ Student Email must follow strict pattern: 24UADxxx@dkte.ac.in");
+                return;
+            }
+
+            const defaultSubjects = DEPT_SUBJECTS[branch] || [];
+            const defaultMarks = defaultSubjects.map(sub => ({ subject: sub.name, se1: 0, se2: 0, see: 0, internal: 0, viva: 0 }));
+
+            const newStudent = {
+                roll: roll,
+                name: name,
+                email: email,
+                password: password,
+                branch: branch,
+                batch: 'T1',
+                attendance: 80.0,
+                cgpa: 7.50,
+                marks: defaultMarks,
+                skills: ['Registered in Semester V (2026)']
+            };
+
+            SYSTEM_STUDENTS.push(newStudent);
+            syncDB();
+            alert(`✅ Signup Successful! Welcome ${name}. Please Login now.`);
+            toggleSignupMode(false);
+        }
+
+        // Admin Save/Edit HOD & TPO
+        function handleSaveHOD(e) {
+            e.preventDefault();
+            const index = parseInt(document.getElementById('admin-hod-index').value);
+            const name = document.getElementById('admin-hod-name').value.trim();
+            const dept = document.getElementById('admin-hod-dept').value;
+            const email = document.getElementById('admin-hod-email').value.trim().toLowerCase();
+            const password = document.getElementById('admin-hod-password').value;
+
+            if (index === -1) {
+                SYSTEM_HODS.push({ name, dept, email, password });
+                alert(`✅ HOD Credential created for ${name}!`);
+            } else {
+                SYSTEM_HODS[index] = { name, dept, email, password };
+                alert(`✅ HOD Credential updated for ${name}!`);
+            }
+
+            syncDB();
+            resetAdminHodForm();
+            renderAdminHodTable();
+        }
+
+        function resetAdminHodForm() {
+            document.getElementById('admin-hod-index').value = '-1';
+            document.getElementById('admin-hod-name').value = '';
+            document.getElementById('admin-hod-email').value = '';
+            document.getElementById('admin-hod-password').value = '';
+            document.getElementById('btn-save-hod').innerText = 'Register HOD Credential';
+        }
+
+        function editHod(index) {
+            const h = SYSTEM_HODS[index];
+            document.getElementById('admin-hod-index').value = index;
+            document.getElementById('admin-hod-name').value = h.name;
+            document.getElementById('admin-hod-dept').value = h.dept;
+            document.getElementById('admin-hod-email').value = h.email;
+            document.getElementById('admin-hod-password').value = h.password;
+            document.getElementById('btn-save-hod').innerText = 'Update HOD Credential';
+        }
+
+        function deleteHod(index) {
+            if (confirm("Are you sure you want to delete this HOD credential?")) {
+                SYSTEM_HODS.splice(index, 1);
+                syncDB();
+                renderAdminHodTable();
+            }
+        }
+
+        function renderAdminHodTable() {
+            const tbody = document.getElementById('table-admin-hods');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            SYSTEM_HODS.forEach((h, idx) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="p-1.5 border-r border-black">${h.name}</td>
+                        <td class="p-1.5 border-r border-black">${h.dept}</td>
+                        <td class="p-1.5 border-r border-black">${h.email}</td>
+                        <td class="p-1.5 space-x-1">
+                            <button onclick="editHod(${idx})" class="neo-btn bg-neoCyan px-1.5 py-0.5 text-[10px]">Edit</button>
+                            <button onclick="deleteHod(${idx})" class="neo-btn bg-neoOrange text-white px-1.5 py-0.5 text-[10px]">Del</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function handleSaveTPO(e) {
+            e.preventDefault();
+            const index = parseInt(document.getElementById('admin-tpo-index').value);
+            const name = document.getElementById('admin-tpo-name').value.trim();
+            const email = document.getElementById('admin-tpo-email').value.trim().toLowerCase();
+            const password = document.getElementById('admin-tpo-password').value;
+
+            if (index === -1) {
+                SYSTEM_TPOS.push({ name, email, password });
+                alert(`✅ TPO Credential created for ${name}!`);
+            } else {
+                SYSTEM_TPOS[index] = { name, email, password };
+                alert(`✅ TPO Credential updated for ${name}!`);
+            }
+
+            syncDB();
+            resetAdminTpoForm();
+            renderAdminTpoTable();
+        }
+
+        function resetAdminTpoForm() {
+            document.getElementById('admin-tpo-index').value = '-1';
+            document.getElementById('admin-tpo-name').value = '';
+            document.getElementById('admin-tpo-email').value = '';
+            document.getElementById('admin-tpo-password').value = '';
+            document.getElementById('btn-save-tpo').innerText = 'Register TPO Credential';
+        }
+
+        function editTpo(index) {
+            const t = SYSTEM_TPOS[index];
+            document.getElementById('admin-tpo-index').value = index;
+            document.getElementById('admin-tpo-name').value = t.name;
+            document.getElementById('admin-tpo-email').value = t.email;
+            document.getElementById('admin-tpo-password').value = t.password;
+            document.getElementById('btn-save-tpo').innerText = 'Update TPO Credential';
+        }
+
+        function deleteTpo(index) {
+            if (confirm("Are you sure you want to delete this TPO credential?")) {
+                SYSTEM_TPOS.splice(index, 1);
+                syncDB();
+                renderAdminTpoTable();
+            }
+        }
+
+        function renderAdminTpoTable() {
+            const tbody = document.getElementById('table-admin-tpos');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            SYSTEM_TPOS.forEach((t, idx) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="p-1.5 border-r border-black">${t.name}</td>
+                        <td class="p-1.5 border-r border-black">${t.email}</td>
+                        <td class="p-1.5 space-x-1">
+                            <button onclick="editTpo(${idx})" class="neo-btn bg-neoCyan px-1.5 py-0.5 text-[10px]">Edit</button>
+                            <button onclick="deleteTpo(${idx})" class="neo-btn bg-neoOrange text-white px-1.5 py-0.5 text-[10px]">Del</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // HOD Subject & Faculty Management
+        function handleAddDepartmentSubject(e) {
+            e.preventDefault();
+            const subName = document.getElementById('hod-subject-name').value.trim();
+            const subType = document.getElementById('hod-subject-type').value;
+
+            if (!DEPT_SUBJECTS[loggedInUser.dept]) {
+                DEPT_SUBJECTS[loggedInUser.dept] = [];
+            }
+
+            DEPT_SUBJECTS[loggedInUser.dept].push({ name: subName, type: subType });
+            syncDB();
+            
+            // INSTANT SYNC: Immediately update student marks lists for this branch
+            SYSTEM_STUDENTS.forEach(s => {
+                if (s.branch === loggedInUser.dept) {
+                    if (!s.marks.find(m => m.subject === subName)) {
+                        s.marks.push({ subject: subName, se1: 0, se2: 0, see: 0, internal: 0, viva: 0 });
+                    }
+                }
+            });
+            syncDB();
+
+            alert(`✅ Subject "${subName}" (${subType}) added instantly to ${loggedInUser.dept}!`);
+
+            document.getElementById('hod-subject-name').value = '';
+            populateHodSubjectDropdown();
+        }
+
+        function populateHodSubjectDropdown() {
+            const subSelect = document.getElementById('hod-teacher-subject');
+            if (!subSelect) return;
+            subSelect.innerHTML = '';
+            const subjects = DEPT_SUBJECTS[loggedInUser.dept] || [];
+
+            subjects.forEach(s => {
+                subSelect.innerHTML += `<option value="${s.name}" data-type="${s.type}">${s.name} (${s.type})</option>`;
+            });
+
+            handleHodSubjectSelectionChange();
+        }
+
+        function handleHodSubjectSelectionChange() {
+            const subSelect = document.getElementById('hod-teacher-subject');
+            if (!subSelect || !subSelect.options.length) return;
+
+            const selectedOption = subSelect.options[subSelect.selectedIndex];
+            const subType = selectedOption.getAttribute('data-type');
+            const batchWrapper = document.getElementById('hod-batch-selection-wrapper');
+
+            if (batchWrapper) {
+                if (subType === 'Theory') {
+                    batchWrapper.style.display = 'none';
+                } else {
+                    batchWrapper.style.display = 'block';
+                }
+            }
+        }
+
+        function handleHodSaveTeacher(e) {
+            e.preventDefault();
+            const index = parseInt(document.getElementById('hod-teacher-index').value);
+            const name = document.getElementById('hod-teacher-name').value.trim();
+            const email = document.getElementById('hod-teacher-email').value.trim().toLowerCase();
+            const password = document.getElementById('hod-teacher-password').value;
+            const subName = document.getElementById('hod-teacher-subject').value;
+
+            const subObj = (DEPT_SUBJECTS[loggedInUser.dept] || []).find(s => s.name === subName);
+            const isLab = subObj && subObj.type === 'Lab';
+            const batch = isLab ? document.getElementById('hod-teacher-batch').value : 'All Class (Theory)';
+
+            if (email.startsWith('24uad')) {
+                alert("⛔ Cannot assign student email to faculty!");
+                return;
+            }
+
+            let teacher = SYSTEM_TEACHERS.find(t => t.email === email);
+
+            if (teacher) {
+                if (!teacher.assignments) {
+                    teacher.assignments = [{ subject: teacher.subject, batch: teacher.batch, type: subObj ? subObj.type : 'Theory' }];
+                }
+                teacher.assignments.push({ subject: subName, batch: batch, type: subObj ? subObj.type : 'Theory' });
+                teacher.name = name;
+                teacher.password = password;
+                alert(`✅ Additional course "${subName}" assigned to ${name}!`);
+            } else {
+                SYSTEM_TEACHERS.push({
+                    name,
+                    email,
+                    password,
+                    dept: loggedInUser.dept,
+                    subject: subName,
+                    batch: batch,
+                    assignments: [{ subject: subName, batch: batch, type: subObj ? subObj.type : 'Theory' }]
+                });
+                alert(`✅ Faculty registered for ${name}!`);
+            }
+
+            syncDB();
+            resetHodTeacherForm();
+            renderHodTeacherTable();
+        }
+
+        function resetHodTeacherForm() {
+            document.getElementById('hod-teacher-index').value = '-1';
+            document.getElementById('hod-teacher-name').value = '';
+            document.getElementById('hod-teacher-email').value = '';
+            document.getElementById('hod-teacher-password').value = '';
+            document.getElementById('btn-save-teacher').innerText = 'Register / Update Faculty';
+        }
+
+        function editTeacher(index) {
+            const t = SYSTEM_TEACHERS[index];
+            document.getElementById('hod-teacher-index').value = index;
+            document.getElementById('hod-teacher-name').value = t.name;
+            document.getElementById('hod-teacher-email').value = t.email;
+            document.getElementById('hod-teacher-password').value = t.password;
+            document.getElementById('btn-save-teacher').innerText = 'Update Faculty Credentials';
+        }
+
+        function deleteTeacher(index) {
+            if (confirm("Are you sure you want to remove this faculty?")) {
+                SYSTEM_TEACHERS.splice(index, 1);
+                syncDB();
+                renderHodTeacherTable();
+            }
+        }
+
+        function renderHodTeacherTable() {
+            const tbody = document.getElementById('table-hod-teachers');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            const deptTeachers = SYSTEM_TEACHERS.filter(t => t.dept === loggedInUser.dept);
+
+            deptTeachers.forEach((t, idx) => {
+                const courseList = t.assignments ? t.assignments.map(a => `${a.subject} (${a.batch})`).join(', ') : `${t.subject} (${t.batch})`;
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="p-2 border-r-2 border-black font-black">${t.name}</td>
+                        <td class="p-2 border-r-2 border-black">${t.email}</td>
+                        <td class="p-2 border-r-2 border-black">${courseList}</td>
+                        <td class="p-2 space-x-1">
+                            <button onclick="editTeacher(${idx})" class="neo-btn bg-neoCyan px-1.5 py-0.5 text-[10px]">Edit</button>
+                            <button onclick="deleteTeacher(${idx})" class="neo-btn bg-neoOrange text-white px-1.5 py-0.5 text-[10px]">Del</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Launch Workspace Panels Safely & Persist Active View
+        function launchPortal(role) {
+            currentRole = role;
+            document.getElementById('section-auth').classList.add('hidden');
+            document.getElementById('nav-user-info').classList.remove('hidden');
+
+            document.getElementById('section-admin').classList.add('hidden');
+            document.getElementById('section-hod').classList.add('hidden');
+            document.getElementById('section-student').classList.add('hidden');
+            document.getElementById('section-teacher').classList.add('hidden');
+            document.getElementById('section-tpo').classList.add('hidden');
+
+            const roleBadge = document.getElementById('nav-user-role');
+
+            if (role === 'admin') {
+                document.getElementById('section-admin').classList.remove('hidden');
+                roleBadge.innerText = 'Admin';
+                document.getElementById('nav-user-name').innerText = loggedInUser.name || 'Admin';
+                document.getElementById('nav-user-id').innerText = "(Super Control)";
+
+                renderAdminHodTable();
+                renderAdminTpoTable();
+            } else if (role === 'hod') {
+                document.getElementById('section-hod').classList.remove('hidden');
+                roleBadge.innerText = 'HOD';
+                document.getElementById('nav-user-name').innerText = loggedInUser.name || 'HOD';
+                document.getElementById('nav-user-id').innerText = `(${loggedInUser.dept || 'Department'})`;
+                document.getElementById('hod-dept-title').innerText = `HOD DASHBOARD — ${loggedInUser.dept || ''}`;
+
+                populateHodSubjectDropdown();
+                renderHodTeacherTable();
+                renderHodStudentRoster();
+            } else if (role === 'student') {
+                document.getElementById('section-student').classList.remove('hidden');
+                roleBadge.innerText = 'Student';
+                document.getElementById('nav-user-name').innerText = loggedInUser.name || 'Student';
+                document.getElementById('nav-user-id').innerText = `(${loggedInUser.roll || ''})`;
+                document.getElementById('stu-display-name').innerText = `${(loggedInUser.name || 'Student').toUpperCase()} (${loggedInUser.roll || ''})`;
+                document.getElementById('stu-display-dept').innerText = `B.Tech ${loggedInUser.branch || ''} • Semester V (2026)`;
+
+                renderStudentView();
+            } else if (role === 'teacher') {
+                document.getElementById('section-teacher').classList.remove('hidden');
+                roleBadge.innerText = 'Teacher';
+                document.getElementById('nav-user-name').innerText = loggedInUser.name || 'Teacher';
+                document.getElementById('nav-user-id').innerText = `(${loggedInUser.dept || ''})`;
+                document.getElementById('teacher-profile-name').innerText = (loggedInUser.name || 'Teacher').toUpperCase();
+
+                populateTeacherSubjectSelector();
+                renderTeacherView();
+            } else if (role === 'tpo') {
+                document.getElementById('section-tpo').classList.remove('hidden');
+                roleBadge.innerText = 'TPO';
+                document.getElementById('nav-user-name').innerText = loggedInUser.name || 'TPO Officer';
+                document.getElementById('nav-user-id').innerText = "(Placement Cell)";
+
+                renderTpoView();
+            }
+        }
+
+        function populateTeacherSubjectSelector() {
+            const select = document.getElementById('teacher-active-subject-select');
+            if (!select) return;
+            select.innerHTML = '';
+            const assignments = loggedInUser.assignments || [{ subject: loggedInUser.subject, batch: loggedInUser.batch }];
+
+            assignments.forEach((a, idx) => {
+                select.innerHTML += `<option value="${idx}">${a.subject} (${a.batch})</option>`;
+            });
+
+            handleTeacherSubjectChange();
+        }
+
+        function handleTeacherSubjectChange() {
+            const select = document.getElementById('teacher-active-subject-select');
+            if (!select) return;
+            const assignments = loggedInUser.assignments || [{ subject: loggedInUser.subject, batch: loggedInUser.batch }];
+            const active = assignments[select.value || 0] || assignments[0];
+
+            document.getElementById('teacher-profile-sub').innerText = `Active Course: ${active.subject} • Target: ${active.batch}`;
+            renderTeacherView();
+        }
+
+        // Explicit Logout Function (Clears Saved Session Token)
+        function logoutUser() {
+            localStorage.removeItem('edex_session');
+            loggedInUser = null;
+            document.getElementById('section-auth').classList.remove('hidden');
+            document.getElementById('nav-user-info').classList.add('hidden');
+            document.getElementById('section-admin').classList.add('hidden');
+            document.getElementById('section-hod').classList.add('hidden');
+            document.getElementById('section-student').classList.add('hidden');
+            document.getElementById('section-teacher').classList.add('hidden');
+            document.getElementById('section-tpo').classList.add('hidden');
+            setAuthRole('student');
+        }
+
+        function renderHodStudentRoster() {
+            const tbody = document.getElementById('table-hod-students');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            const deptStudents = SYSTEM_STUDENTS.filter(s => s.branch === loggedInUser.dept);
+
+            deptStudents.forEach(s => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="p-2 border-r-2 border-black font-black">${s.name} (${s.roll})</td>
+                        <td class="p-2 border-r-2 border-black">${s.branch}</td>
+                        <td class="p-2 border-r-2 border-black font-black text-neoOrange">${s.batch}</td>
+                        <td class="p-2">
+                            <button onclick="reassignStudentBatch('${s.roll}')" class="neo-btn bg-neoCyan px-2 py-0.5 text-[10px]">Reassign Batch</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function reassignStudentBatch(roll) {
+            const student = SYSTEM_STUDENTS.find(s => s.roll === roll);
+            if (!student) return;
+
+            const newBatch = prompt(`Reassign batch for ${student.name} (${student.roll}). Current: ${student.batch}. Enter new batch (T1, T2, T3, or T4):`, student.batch);
+            if (newBatch && ['T1', 'T2', 'T3', 'T4'].includes(newBatch.toUpperCase())) {
+                student.batch = newBatch.toUpperCase();
+                syncDB();
+                renderHodStudentRoster();
+                alert(`✅ Batch updated to ${student.batch} for ${student.name}`);
+            }
+        }
+
+        function renderStudentView() {
+            const table = document.getElementById('table-student-marks');
+            if (!table) return;
+            table.innerHTML = '';
+
+            (loggedInUser.marks || []).forEach(m => {
+                const totalPct = Math.round(((m.se1 + m.se2 + m.see + m.internal + m.viva) / 200) * 100);
+                table.innerHTML += `
+                    <tr>
+                        <td class="p-3 border-r-2 border-black font-black">${m.subject}</td>
+                        <td class="p-3 border-r-2 border-black">${m.se1}</td>
+                        <td class="p-3 border-r-2 border-black">${m.se2}</td>
+                        <td class="p-3 border-r-2 border-black">${m.see}</td>
+                        <td class="p-3 border-r-2 border-black">${m.internal}</td>
+                        <td class="p-3 border-r-2 border-black">${m.viva}</td>
+                        <td class="p-3 border-r-2 border-black font-black text-blue-600">${totalPct}%</td>
+                        <td class="p-3"><span class="badge-tag bg-neoGreen px-2 py-0.5 text-[10px]">Passed</span></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderTeacherView() {
+            const tbody = document.getElementById('table-teacher-entry');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            const select = document.getElementById('teacher-active-subject-select');
+            const assignments = loggedInUser.assignments || [{ subject: loggedInUser.subject, batch: loggedInUser.batch }];
+            const active = assignments[select ? (select.value || 0) : 0] || assignments[0];
+
+            let branchStudents = SYSTEM_STUDENTS.filter(s => s.branch === loggedInUser.dept);
+            if (active.batch !== 'All Class (Theory)') {
+                branchStudents = branchStudents.filter(s => s.batch === active.batch);
+            }
+
+            branchStudents.forEach(s => {
+                const m = (s.marks || []).find(mk => mk.subject === active.subject) || { se1: 0, se2: 0, see: 0, internal: 0, viva: 0 };
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="p-2.5 border-r-2 border-black font-black">${s.name} (${s.roll})</td>
+                        <td class="p-2.5 border-r-2 border-black font-black">${s.batch}</td>
+                        <td class="p-2.5 border-r-2 border-black"><input type="number" id="se1-${s.roll}" value="${m.se1}" max="25" class="w-12 neo-border p-1 text-center font-bold"></td>
+                        <td class="p-2.5 border-r-2 border-black"><input type="number" id="se2-${s.roll}" value="${m.se2}" max="25" class="w-12 neo-border p-1 text-center font-bold"></td>
+                        <td class="p-2.5 border-r-2 border-black"><input type="number" id="see-${s.roll}" value="${m.see}" max="50" class="w-12 neo-border p-1 text-center font-bold"></td>
+                        <td class="p-2.5 border-r-2 border-black"><input type="number" id="int-${s.roll}" value="${m.internal}" max="50" class="w-12 neo-border p-1 text-center font-bold"></td>
+                        <td class="p-2.5 border-r-2 border-black"><input type="number" id="viv-${s.roll}" value="${m.viva}" max="50" class="w-12 neo-border p-1 text-center font-bold"></td>
+                        <td class="p-2.5">
+                            <button onclick="saveStudentMarks('${s.roll}', '${active.subject}')" class="neo-btn bg-neoYellow px-2 py-1 text-[10px] font-black uppercase">Save</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function saveStudentMarks(roll, subjectName) {
+            const student = SYSTEM_STUDENTS.find(s => s.roll === roll);
+            if (!student) return;
+
+            if (!student.marks) student.marks = [];
+            let m = student.marks.find(mk => mk.subject === subjectName);
+            if (!m) {
+                m = { subject: subjectName, se1: 0, se2: 0, see: 0, internal: 0, viva: 0 };
+                student.marks.push(m);
+            }
+
+            m.se1 = parseInt(document.getElementById(`se1-${roll}`).value) || 0;
+            m.se2 = parseInt(document.getElementById(`se2-${roll}`).value) || 0;
+            m.see = parseInt(document.getElementById(`see-${roll}`).value) || 0;
+            m.internal = parseInt(document.getElementById(`int-${roll}`).value) || 0;
+            m.viva = parseInt(document.getElementById(`viv-${roll}`).value) || 0;
+
+            syncDB();
+            alert(`✅ Marks updated dynamically for ${student.name}`);
+        }
+
+        function renderTpoView() {
+            const tbody = document.getElementById('table-tpo-cohort');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            SYSTEM_STUDENTS.forEach(s => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="p-2.5 border-r-2 border-black font-black">${s.name} (${s.roll})</td>
+                        <td class="p-2.5 border-r-2 border-black font-bold">${s.branch}</td>
+                        <td class="p-2.5 border-r-2 border-black font-mono">${s.cgpa}</td>
+                        <td class="p-2.5 border-r-2 border-black font-mono">${s.attendance}%</td>
+                        <td class="p-2.5 font-bold text-neoGreen">Eligible for Drives</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function downloadStudentMonthlyReport() {
+            document.getElementById('pdf-stu-name').innerText = loggedInUser.name || '';
+            document.getElementById('pdf-stu-roll').innerText = loggedInUser.roll || '';
+            document.getElementById('pdf-stu-branch').innerText = loggedInUser.branch || '';
+
+            const pdfMarks = document.getElementById('pdf-table-marks');
+            pdfMarks.innerHTML = '';
+            (loggedInUser.marks || []).forEach(m => {
+                pdfMarks.innerHTML += `
+                    <tr class="border-b border-black">
+                        <td class="p-1 border-r border-black font-bold">${m.subject}</td>
+                        <td class="p-1 border-r border-black">${m.se1}/25</td>
+                        <td class="p-1 border-r border-black">${m.se2}/25</td>
+                        <td class="p-1 border-r border-black">${m.see}/50</td>
+                        <td class="p-1 border-r border-black">${m.internal}/50</td>
+                        <td class="p-1">${m.viva}/50</td>
+                    </tr>
+                `;
+            });
+
+            const element = document.getElementById('pdf-report-template');
+            element.classList.remove('hidden');
+
+            html2canvas(element).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                pdf.addImage(imgData, 'PNG', 10, 10, 190, 0);
+                pdf.save(`EdExPlus_Report_${loggedInUser.roll || 'Student'}.pdf`);
+                element.classList.add('hidden');
+            });
+        }
+
+        // Initialize App & Auto-Restore Active User Session
+        window.onload = function() {
+            const savedSession = dbGet('session', null);
+            if (savedSession && savedSession.role && savedSession.user) {
+                loggedInUser = savedSession.user;
+                launchPortal(savedSession.role);
+            } else {
+                setAuthRole('student');
+            }
+        }
+    </script>
+</body>
+</html>
