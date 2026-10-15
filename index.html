@@ -589,7 +589,7 @@
         </div>
     </div>
 
-    <!-- FIREBASE CLOUD FIRESTORE SYNC & APP LOGIC -->
+    <!-- FIREBASE CLOUD FIRESTORE DOCUMENT-LEVEL SYNC & APP LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { 
@@ -650,7 +650,7 @@
             window.getCloudCol = getCloudCol;
             window.getCloudDoc = getCloudDoc;
 
-            // Initialize Realtime Listeners with Permission-Denied Error Guardrails
+            // Document-level Realtime Listeners for bi-directional multi-device sync
             onSnapshot(getCloudCol('students'), (snap) => {
                 const list = [];
                 snap.forEach(d => list.push(d.data()));
@@ -661,66 +661,47 @@
                     if (window.currentRole === 'teacher') window.renderTeacherView();
                     if (window.currentRole === 'tpo') window.renderTpoView();
                 }
-            }, (err) => {
-                console.warn("Firestore Notice (Students): Using local fallback cache.");
-            });
+            }, (err) => { console.warn("Firestore Notice (Students): Using local cache."); });
 
             onSnapshot(getCloudCol('hods'), (snap) => {
                 const list = [];
                 snap.forEach(d => list.push(d.data()));
-                if (list.length > 0) {
-                    window.SYSTEM_HODS = list;
-                    dbSet('hods', list);
-                    if (window.currentRole === 'admin') window.renderAdminHodTable();
-                }
-            }, (err) => {
-                console.warn("Firestore Notice (HODs): Using local fallback cache.");
-            });
+                window.SYSTEM_HODS = list;
+                dbSet('hods', list);
+                if (window.currentRole === 'admin') window.renderAdminHodTable();
+            }, (err) => { console.warn("Firestore Notice (HODs): Using local cache."); });
 
             onSnapshot(getCloudCol('tpos'), (snap) => {
                 const list = [];
                 snap.forEach(d => list.push(d.data()));
-                if (list.length > 0) {
-                    window.SYSTEM_TPOS = list;
-                    dbSet('tpos', list);
-                    if (window.currentRole === 'admin') window.renderAdminTpoTable();
-                }
-            }, (err) => {
-                console.warn("Firestore Notice (TPOs): Using local fallback cache.");
-            });
+                window.SYSTEM_TPOS = list;
+                dbSet('tpos', list);
+                if (window.currentRole === 'admin') window.renderAdminTpoTable();
+            }, (err) => { console.warn("Firestore Notice (TPOs): Using local cache."); });
 
             onSnapshot(getCloudCol('teachers'), (snap) => {
                 const list = [];
                 snap.forEach(d => list.push(d.data()));
-                if (list.length > 0) {
-                    window.SYSTEM_TEACHERS = list;
-                    dbSet('teachers', list);
-                    if (window.currentRole === 'hod') window.renderHodTeacherTable();
-                }
-            }, (err) => {
-                console.warn("Firestore Notice (Teachers): Using local fallback cache.");
-            });
+                window.SYSTEM_TEACHERS = list;
+                dbSet('teachers', list);
+                if (window.currentRole === 'hod') window.renderHodTeacherTable();
+            }, (err) => { console.warn("Firestore Notice (Teachers): Using local cache."); });
 
         } catch (initErr) {
-            console.warn("Firebase Init Warning (Running in offline resilient mode):", initErr);
+            console.warn("Firebase Init Warning (Offline Resilient Mode):", initErr);
         }
     </script>
 
     <script>
-        // LocalStorage Helpers for robust offline and rules fallback
         function dbGet(key, defaultVal) {
             try {
                 const data = localStorage.getItem('edex_' + key);
                 return data ? JSON.parse(data) : defaultVal;
-            } catch (e) {
-                return defaultVal;
-            }
+            } catch (e) { return defaultVal; }
         }
 
         function dbSet(key, value) {
-            try {
-                localStorage.setItem('edex_' + key, JSON.stringify(value));
-            } catch (e) {}
+            try { localStorage.setItem('edex_' + key, JSON.stringify(value)); } catch (e) {}
         }
 
         let currentRole = 'student';
@@ -742,10 +723,7 @@
         });
         window.DEPT_SUBJECTS = DEPT_SUBJECTS;
 
-        const SUPER_ADMIN = {
-            email: 'admin@edexplus.com',
-            password: 'edexplus@112233'
-        };
+        const SUPER_ADMIN = { email: 'admin@edexplus.com', password: 'edexplus@112233' };
 
         let SYSTEM_HODS = dbGet('hods', [
             { id: 'hod_aids_gmail_com', name: 'Prof. T.I. Bagban', dept: 'CSE (AI-DS)', email: 'aids@gmail.com', password: 'password123' },
@@ -984,18 +962,18 @@
         }
         window.handleStudentSignup = handleStudentSignup;
 
-        // Admin HOD Save
+        // Admin HOD Save with Document-Level Firestore ID
         async function handleSaveHOD(e) {
             e.preventDefault();
-            const docId = document.getElementById('admin-hod-id').value;
+            const docId = document.getElementById('admin-hod-id').value || 'hod_' + Date.now();
             const name = document.getElementById('admin-hod-name').value.trim();
             const dept = document.getElementById('admin-hod-dept').value;
             const email = document.getElementById('admin-hod-email').value.trim().toLowerCase();
             const password = document.getElementById('admin-hod-password').value;
 
-            const hodData = { id: docId || email.replace(/[@.]/g, '_'), name, dept, email, password };
+            const hodData = { id: docId, name, dept, email, password };
             
-            const existingIdx = SYSTEM_HODS.findIndex(h => h.email === email);
+            const existingIdx = SYSTEM_HODS.findIndex(h => h.id === docId || h.email === email);
             if (existingIdx >= 0) {
                 SYSTEM_HODS[existingIdx] = hodData;
             } else {
@@ -1003,7 +981,7 @@
             }
 
             if (window.getCloudDoc && window.fbSetDoc) {
-                try { await window.fbSetDoc(window.getCloudDoc('hods', hodData.id), hodData); } catch(e){}
+                try { await window.fbSetDoc(window.getCloudDoc('hods', docId), hodData); } catch(e){}
             }
 
             syncAllDB();
@@ -1024,7 +1002,7 @@
         function editHod(id) {
             const h = SYSTEM_HODS.find(item => item.id === id || item.email === id);
             if (!h) return;
-            document.getElementById('admin-hod-id').value = h.id || h.email;
+            document.getElementById('admin-hod-id').value = h.id;
             document.getElementById('admin-hod-name').value = h.name;
             document.getElementById('admin-hod-dept').value = h.dept;
             document.getElementById('admin-hod-email').value = h.email;
@@ -1066,17 +1044,17 @@
         }
         window.renderAdminHodTable = renderAdminHodTable;
 
-        // Admin TPO Save
+        // Admin TPO Save with Document-Level Firestore ID
         async function handleSaveTPO(e) {
             e.preventDefault();
-            const docId = document.getElementById('admin-tpo-id').value;
+            const docId = document.getElementById('admin-tpo-id').value || 'tpo_' + Date.now();
             const name = document.getElementById('admin-tpo-name').value.trim();
             const email = document.getElementById('admin-tpo-email').value.trim().toLowerCase();
             const password = document.getElementById('admin-tpo-password').value;
 
-            const tpoData = { id: docId || email.replace(/[@.]/g, '_'), name, email, password };
+            const tpoData = { id: docId, name, email, password };
             
-            const existingIdx = SYSTEM_TPOS.findIndex(t => t.email === email);
+            const existingIdx = SYSTEM_TPOS.findIndex(t => t.id === docId || t.email === email);
             if (existingIdx >= 0) {
                 SYSTEM_TPOS[existingIdx] = tpoData;
             } else {
@@ -1084,7 +1062,7 @@
             }
 
             if (window.getCloudDoc && window.fbSetDoc) {
-                try { await window.fbSetDoc(window.getCloudDoc('tpos', tpoData.id), tpoData); } catch(e){}
+                try { await window.fbSetDoc(window.getCloudDoc('tpos', docId), tpoData); } catch(e){}
             }
 
             syncAllDB();
@@ -1105,7 +1083,7 @@
         function editTpo(id) {
             const t = SYSTEM_TPOS.find(item => item.id === id || item.email === id);
             if (!t) return;
-            document.getElementById('admin-tpo-id').value = t.id || t.email;
+            document.getElementById('admin-tpo-id').value = t.id;
             document.getElementById('admin-tpo-name').value = t.name;
             document.getElementById('admin-tpo-email').value = t.email;
             document.getElementById('admin-tpo-password').value = t.password;
@@ -1197,7 +1175,7 @@
 
         async function handleHodSaveTeacher(e) {
             e.preventDefault();
-            const docId = document.getElementById('hod-teacher-id').value;
+            const docId = document.getElementById('hod-teacher-id').value || 'teach_' + Date.now();
             const name = document.getElementById('hod-teacher-name').value.trim();
             const email = document.getElementById('hod-teacher-email').value.trim().toLowerCase();
             const password = document.getElementById('hod-teacher-password').value;
@@ -1207,7 +1185,7 @@
             const isLab = subObj && subObj.type === 'Lab';
             const batch = isLab ? document.getElementById('hod-teacher-batch').value : 'All Class (Theory)';
 
-            let teacher = SYSTEM_TEACHERS.find(t => t.email === email);
+            let teacher = SYSTEM_TEACHERS.find(t => t.id === docId || t.email === email);
 
             if (teacher) {
                 if (!teacher.assignments) teacher.assignments = [];
@@ -1220,7 +1198,7 @@
                 teacher.password = password;
             } else {
                 teacher = {
-                    id: email.replace(/[@.]/g, '_'),
+                    id: docId,
                     name,
                     email,
                     password,
@@ -1254,7 +1232,7 @@
         function editTeacher(id) {
             const t = SYSTEM_TEACHERS.find(item => item.id === id || item.email === id);
             if (!t) return;
-            document.getElementById('hod-teacher-id').value = t.id || t.email;
+            document.getElementById('hod-teacher-id').value = t.id;
             document.getElementById('hod-teacher-name').value = t.name;
             document.getElementById('hod-teacher-email').value = t.email;
             document.getElementById('hod-teacher-password').value = t.password;
@@ -1283,7 +1261,7 @@
             }
             teacher.assignments.splice(courseIndex, 1);
             if (window.getCloudDoc && window.fbSetDoc) {
-                try { await window.fbSetDoc(window.getCloudDoc('teachers', teacher.id || teacher.email), teacher); } catch(e){}
+                try { await window.fbSetDoc(window.getCloudDoc('teachers', teacher.id), teacher); } catch(e){}
             }
             syncAllDB();
             renderHodTeacherTable();
@@ -1297,7 +1275,7 @@
             const deptTeachers = SYSTEM_TEACHERS.filter(t => t.dept === loggedInUser.dept);
 
             deptTeachers.forEach(t => {
-                const identifier = t.id || t.email;
+                const identifier = t.id;
                 const assignments = t.assignments || [{ subject: t.subject, batch: t.batch }];
                 let courseTags = assignments.map((a, cIdx) => `
                     <span class="inline-flex items-center gap-1 bg-neoYellow px-1.5 py-0.5 neo-border text-[10px] my-0.5">
