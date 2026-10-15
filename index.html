@@ -36,11 +36,10 @@
             doc,
             setDoc,
             getDoc,
-            onSnapshot,
-            collection
+            onSnapshot
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Your Production Web App Firebase Configuration
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBrDR19pOEa5Hcj9mkCNpnYlG0X88gkXzg",
             authDomain: "edexplus-ai.firebaseapp.com",
@@ -67,26 +66,33 @@
         window.fbGetDoc = getDoc;
         window.fbOnSnapshot = onSnapshot;
 
-        // Listen for Realtime Auth & Database Changes
-        onAuthStateChanged(auth, (user) => {
+        // Firebase Auth State Observer
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
-                console.log("Firebase Auth State Verified:", user.email, "Verified:", user.emailVerified);
-                currentUserEmail = user.email;
-                if (window.pendingVerification) {
-                    showCustomModal("✅ Firebase Gmail Authentication Successful!");
-                    launchPortalView();
+                console.log("Firebase Auth State:", user.email, "Verified:", user.emailVerified);
+                currentUserEmail = user.email.toLowerCase();
+                
+                if (user.emailVerified) {
+                    document.getElementById('email-verification-box').classList.add('hidden');
+                    if (window.pendingRegistrationOrLogin) {
+                        showCustomModal("✅ Email Verified via Firebase! Launching Profile...");
+                        window.pendingRegistrationOrLogin = false;
+                        await loadAndLaunchStudentProfile(currentUserEmail);
+                    }
+                } else {
+                    document.getElementById('target-verification-email').innerText = user.email;
+                    document.getElementById('email-verification-box').classList.remove('hidden');
                 }
             }
         });
 
-        // Setup Realtime Database Sync across Teachers, Students & Mentors
+        // Setup Firestore Sync
         const cohortRef = doc(db, "academic_cohort", "cse_aids_2024");
         onSnapshot(cohortRef, (docSnap) => {
             if (docSnap.exists()) {
                 const liveData = docSnap.data().students;
                 if (liveData && liveData.length > 0) {
                     window.COHORT_DATA = liveData;
-                    console.log("🔄 Realtime Database Synced across Portals!");
                     refreshCurrentActivePortal();
                 }
             }
@@ -184,106 +190,118 @@
     <!-- MAIN WORKSPACE -->
     <main class="flex-1 max-w-7xl w-full mx-auto space-y-6">
 
-        <!-- ========================================== -->
-        <!-- VIEW 1: AUTHENTICATION (FIREBASE AUTH & GMAIL) -->
-        <!-- ========================================== -->
+        <!-- VIEW 1: AUTHENTICATION -->
         <section id="section-auth" class="max-w-md mx-auto my-8">
-            <div class="bg-white neo-border-lg p-6 md:p-8 shadow-neo-lg relative">
+            <div class="bg-white neo-border-lg p-6 md:p-8 relative">
                 <div class="absolute -top-4 -right-4 bg-neoPink text-black font-heading font-black text-xs px-3 py-1 neo-border uppercase rotate-3">
                     DKTE Autonomous
                 </div>
 
-                <h2 class="font-heading font-black text-2xl md:text-3xl text-center mb-2">PORTAL LOGIN</h2>
-                <p class="text-center font-bold text-xs mb-6 text-slate-700 uppercase">Select Role & Authenticate via Firebase</p>
+                <h2 class="font-heading font-black text-2xl md:text-3xl text-center mb-1" id="auth-header-title">PORTAL LOGIN</h2>
+                <p class="text-center font-bold text-xs mb-6 text-slate-700 uppercase" id="auth-header-sub">Authenticate via Firebase & Verify Email</p>
 
                 <!-- ROLE TAB SELECTOR -->
-                <div class="grid grid-cols-3 gap-2 mb-6">
+                <div class="grid grid-cols-3 gap-2 mb-4">
                     <button id="btn-tab-student" type="button" onclick="setAuthRole('student')" 
-                        class="neo-btn bg-neoCyan py-2 font-heading text-xs md:text-sm font-black uppercase text-center">
+                        class="neo-btn bg-neoCyan py-2 font-heading text-xs font-black uppercase text-center">
                         👨‍🎓 Student
                     </button>
                     <button id="btn-tab-teacher" type="button" onclick="setAuthRole('teacher')" 
-                        class="neo-btn bg-white py-2 font-heading text-xs md:text-sm font-black uppercase text-center">
+                        class="neo-btn bg-white py-2 font-heading text-xs font-black uppercase text-center">
                         👩‍🏫 Teacher
                     </button>
                     <button id="btn-tab-tpo" type="button" onclick="setAuthRole('tpo')" 
-                        class="neo-btn bg-white py-2 font-heading text-xs md:text-sm font-black uppercase text-center">
+                        class="neo-btn bg-white py-2 font-heading text-xs font-black uppercase text-center">
                         🏛️ Mentor/TPO
+                    </button>
+                </div>
+
+                <!-- LOGIN / SIGNUP MODE SELECTOR -->
+                <div class="flex gap-2 mb-6 p-1 bg-slate-100 neo-border">
+                    <button type="button" id="btn-mode-login" onclick="setAuthMode('login')" class="flex-1 py-1.5 font-bold text-xs uppercase bg-neoYellow neo-border text-center">
+                        Login
+                    </button>
+                    <button type="button" id="btn-mode-signup" onclick="setAuthMode('signup')" class="flex-1 py-1.5 font-bold text-xs uppercase bg-white text-center">
+                        Sign Up
                     </button>
                 </div>
 
                 <!-- GMAIL DIRECT AUTH BUTTON -->
                 <div class="mb-4">
                     <button type="button" onclick="handleGoogleSignIn()" class="w-full neo-btn bg-white hover:bg-slate-50 py-3 font-heading text-xs font-black uppercase flex items-center justify-center gap-2 border-2 border-black">
-                        <i class="fa-brands fa-google text-neoPink text-base"></i> Authenticate with Gmail (Firebase Auth)
+                        <i class="fa-brands fa-google text-neoPink text-base"></i> Authenticate with Gmail
                     </button>
                 </div>
 
                 <div class="relative flex py-2 items-center mb-4">
                     <div class="flex-grow border-t-2 border-black"></div>
-                    <span class="flex-shrink mx-2 text-[10px] font-black uppercase bg-neoYellow px-2 py-0.5 neo-border">Or Email Link Auth</span>
+                    <span class="flex-shrink mx-2 text-[10px] font-black uppercase bg-neoYellow px-2 py-0.5 neo-border">Or Email Auth</span>
                     <div class="flex-grow border-t-2 border-black"></div>
                 </div>
 
                 <!-- LOGIN FORM -->
-                <form onsubmit="handleAuthLogin(event)" class="space-y-4">
+                <form onsubmit="handleAuthSubmit(event)" class="space-y-4">
+                    <div id="field-full-name" class="hidden">
+                        <label class="block font-bold text-xs uppercase mb-1">Full Name</label>
+                        <input type="text" id="auth-name" placeholder="e.g. Atharva Parit" 
+                            class="w-full bg-slate-50 neo-border p-3 font-bold text-sm focus:outline-none focus:bg-neoYellow/20">
+                    </div>
+
                     <div>
                         <label class="block font-bold text-xs uppercase mb-1" id="label-email">Student DKTE Email ID</label>
                         <input type="email" id="auth-email" required placeholder="e.g. 24uad002@dkte.ac.in" 
                             class="w-full bg-slate-50 neo-border p-3 font-bold text-sm focus:outline-none focus:bg-neoYellow/20">
                         <p id="auth-email-hint" class="text-[11px] font-bold text-neoOrange mt-1">
-                            ⚠️ Strict format for students: 24UADxxx@dkte.ac.in (e.g., 24uad002@dkte.ac.in)
+                            ⚠️ Strict format: 24UADxxx@dkte.ac.in (e.g., 24uad002@dkte.ac.in)
                         </p>
                     </div>
 
                     <div>
                         <label class="block font-bold text-xs uppercase mb-1">Password</label>
-                        <input type="password" id="auth-password" required value="dkte1234" placeholder="Enter password (min 6 characters)"
+                        <input type="password" id="auth-password" required placeholder="Enter password (min 6 chars)"
                             class="w-full bg-slate-50 neo-border p-3 font-bold text-sm focus:outline-none focus:bg-neoYellow/20">
                     </div>
 
                     <!-- FIREBASE EMAIL VERIFICATION LINK BOX -->
                     <div id="email-verification-box" class="hidden p-4 bg-neoYellow/30 neo-border space-y-3">
                         <div class="flex items-center gap-2">
-                            <span class="badge-tag bg-neoPink px-2.5 py-0.5 text-[10px] font-bold uppercase">Firebase Email Verification Link</span>
+                            <span class="badge-tag bg-neoPink px-2.5 py-0.5 text-[10px] font-bold uppercase">Email Verification Required</span>
                         </div>
                         <p class="text-xs font-bold leading-relaxed">
                             ✉️ Verification link sent to <span id="target-verification-email" class="underline font-black text-black">user@dkte.ac.in</span>.
                         </p>
                         <div class="p-2.5 bg-white neo-border text-[11px] font-bold text-slate-800">
-                            Please check your inbox / spam folder and click the verification link, then click below to confirm.
+                            Check inbox / spam folder, click the verification link, then click below to confirm.
                         </div>
                         <div class="flex gap-2">
                             <button type="button" onclick="resendVerificationEmailLink()" class="neo-btn bg-white px-3 py-2 text-xs font-bold uppercase flex-1">
-                                📩 Resend Email Link
+                                📩 Resend
                             </button>
-                            <button type="button" onclick="confirmEmailVerificationLink()" class="neo-btn bg-neoGreen px-4 py-2 text-xs font-bold uppercase flex-1">
+                            <button type="button" onclick="checkEmailVerificationStatus()" class="neo-btn bg-neoGreen px-4 py-2 text-xs font-bold uppercase flex-1">
                                 ✅ I Have Verified
                             </button>
                         </div>
                     </div>
 
                     <button type="submit" id="btn-submit-auth" class="w-full neo-btn bg-neoGreen py-3.5 font-heading text-sm font-black uppercase tracking-wider">
-                        Send Verification Link & Login →
+                        Login to Portal →
                     </button>
                 </form>
 
                 <div class="mt-6 pt-4 border-t-2 border-black flex items-center justify-between text-xs font-bold">
-                    <span>Project: EdExPlus AI v3.0</span>
-                    <span class="bg-neoYellow px-2 py-0.5 neo-border">Realtime Firestore Active</span>
+                    <span>EdExPlus AI v3.0</span>
+                    <span class="bg-neoYellow px-2 py-0.5 neo-border">Firebase Auth Active</span>
                 </div>
             </div>
         </section>
 
-        <!-- ========================================== -->
-        <!-- VIEW 2: STUDENT PORTAL DEDICATED           -->
-        <!-- ========================================== -->
+        <!-- VIEW 2: STUDENT PORTAL -->
         <section id="section-student" class="hidden space-y-6">
             <div class="bg-neoCyan neo-border-lg p-5 md:p-6 shadow-neo-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
                     <span class="badge-tag bg-white px-2.5 py-1 text-xs font-bold uppercase">Student Academic Hub</span>
-                    <h2 class="font-heading font-black text-2xl md:text-3xl mt-1">ATHARVA PARIT (24UAD002)</h2>
-                    <p class="font-bold text-xs text-black/80">B.Tech Computer Science & Engineering (AI-DS) • Semester IV</p>
+                    <h2 class="font-heading font-black text-2xl md:text-3xl mt-1" id="stu-display-name">ATHARVA PARIT (24UAD002)</h2>
+                    <p class="font-bold text-xs text-black/80" id="stu-display-sub">B.Tech Computer Science & Engineering (AI-DS) • Semester IV</p>
                 </div>
                 
                 <div class="flex items-center gap-3">
@@ -303,27 +321,27 @@
                 <div class="bg-white p-4 neo-border shadow-neo">
                     <p class="font-bold text-xs uppercase text-slate-600">Cumulative CGPA</p>
                     <p class="font-heading font-black text-3xl mt-1 text-blue-600" id="stu-overall-cgpa">8.72</p>
-                    <span class="badge-tag bg-neoYellow text-[10px] px-2 py-0.5 font-bold uppercase">Top 10% Class</span>
+                    <span class="badge-tag bg-neoYellow text-[10px] px-2 py-0.5 font-bold uppercase">Class Rank Top 10%</span>
                 </div>
                 <div class="bg-white p-4 neo-border shadow-neo">
-                    <p class="font-bold text-xs uppercase text-slate-600">Predicted Academic Risk</p>
+                    <p class="font-bold text-xs uppercase text-slate-600">Predicted Risk</p>
                     <p class="font-heading font-black text-3xl mt-1 text-emerald-600" id="stu-risk-tag">LOW (12%)</p>
                     <span class="badge-tag bg-neoCyan text-[10px] px-2 py-0.5 font-bold uppercase">On Track</span>
                 </div>
                 <div class="bg-white p-4 neo-border shadow-neo">
-                    <p class="font-bold text-xs uppercase text-slate-600">Verified Skills / Events</p>
-                    <p class="font-heading font-black text-3xl mt-1 text-neoOrange" id="stu-display-skills-count">3 Recorded</p>
-                    <span class="badge-tag bg-neoPink text-[10px] px-2 py-0.5 font-bold uppercase">Verified by Mentor</span>
+                    <p class="font-bold text-xs uppercase text-slate-600">Verified Skills</p>
+                    <p class="font-heading font-black text-3xl mt-1 text-neoOrange" id="stu-display-skills-count">0 Recorded</p>
+                    <span class="badge-tag bg-neoPink text-[10px] px-2 py-0.5 font-bold uppercase">Mentor Logged</span>
                 </div>
             </div>
 
-            <!-- Subject-wise Marks Table -->
+            <!-- Marks Table -->
             <div class="bg-white neo-border-lg p-5 shadow-neo-lg space-y-4">
                 <div class="flex items-center justify-between border-b-4 border-black pb-3">
                     <h3 class="font-heading font-black text-lg uppercase flex items-center gap-2">
-                        <i class="fa-solid fa-graduation-cap text-neoPink"></i> Current Semester Evaluation Marks (Synced Realtime)
+                        <i class="fa-solid fa-graduation-cap text-neoPink"></i> Semester Evaluation Marks
                     </h3>
-                    <span class="badge-tag bg-neoYellow px-2.5 py-1 text-xs font-bold uppercase">Sem 4 • Scheme 2024</span>
+                    <span class="badge-tag bg-neoYellow px-2.5 py-1 text-xs font-bold uppercase">Scheme 2024</span>
                 </div>
 
                 <div class="overflow-x-auto">
@@ -341,18 +359,18 @@
                             </tr>
                         </thead>
                         <tbody id="table-student-marks" class="divide-y-2 divide-black">
-                            <!-- Populated dynamically via Firebase -->
+                            <!-- Populated dynamically -->
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- Extracurriculars & AI Improvement Insights -->
+            <!-- Skills & Insights -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="bg-white neo-border-lg p-5 shadow-neo-lg space-y-3">
                     <h3 class="font-heading font-black text-base uppercase border-b-2 border-black pb-2 flex items-center justify-between">
-                        <span><i class="fa-solid fa-award text-neoOrange"></i> Mentor Verified Extracurriculars</span>
-                        <span class="text-[10px] bg-neoCyan px-2 py-0.5 neo-border">Firestore Synced</span>
+                        <span><i class="fa-solid fa-award text-neoOrange"></i> Verified Extracurriculars</span>
+                        <span class="text-[10px] bg-neoCyan px-2 py-0.5 neo-border">Mentor Endorsed</span>
                     </h3>
                     <div id="student-skills-list" class="space-y-2">
                         <!-- Populated by JS -->
@@ -361,29 +379,27 @@
 
                 <div class="bg-white neo-border-lg p-5 shadow-neo-lg space-y-3">
                     <h3 class="font-heading font-black text-base uppercase border-b-2 border-black pb-2 text-neoPurple">
-                        <i class="fa-solid fa-brain"></i> AI Improvement Insights & Diagnostics
+                        <i class="fa-solid fa-brain"></i> Performance Insights
                     </h3>
                     <div class="p-3 bg-neoYellow/30 neo-border space-y-2 text-xs font-bold">
                         <div class="flex items-center gap-2 text-black">
                             <i class="fa-solid fa-lightbulb text-base text-neoOrange"></i>
-                            <span>Weakness Identified: Computer Networks (Ext Viva Prep Required)</span>
+                            <span>Diagnostics Summary</span>
                         </div>
-                        <p class="font-normal text-slate-800">
-                            Theory exam average is 82%, but external viva scores need focus on Packet Tracer protocols and TCP/IP handshakes.
+                        <p id="stu-improvement-text" class="font-normal text-slate-800">
+                            Academic metrics and practical viva scores are currently in good standing. Keep engaging in coding practice and hackathons.
                         </p>
                     </div>
 
                     <div class="p-3 bg-neoGreen/30 neo-border text-xs font-bold">
-                        <span class="uppercase block font-black mb-1">✅ Placement Eligibility Forecast:</span>
-                        Eligible for Tier-1 Campus Drives (>7.5 CGPA, 0 Active Backlogs, >75% Attendance).
+                        <span class="uppercase block font-black mb-1">✅ Placement Eligibility:</span>
+                        <span id="stu-placement-text">Eligible for Tier-1 Campus Drives (>7.5 CGPA, 0 Active Backlogs).</span>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- ========================================== -->
-        <!-- VIEW 3: TEACHER PORTAL (MARKS & ATTENDANCE) -->
-        <!-- ========================================== -->
+        <!-- VIEW 3: TEACHER PORTAL -->
         <section id="section-teacher" class="hidden space-y-6">
             <div class="bg-neoPink neo-border-lg p-5 shadow-neo-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
@@ -407,14 +423,13 @@
                 </div>
             </div>
 
-            <!-- Student Marks & Attendance Entry Ledger -->
             <div class="bg-white neo-border-lg p-5 shadow-neo-lg space-y-4">
                 <div class="flex flex-wrap items-center justify-between gap-3 border-b-4 border-black pb-3">
                     <div>
                         <h3 class="font-heading font-black text-lg uppercase">
                             Class Attendance & Exam Marks Ledger
                         </h3>
-                        <p class="text-xs font-bold text-slate-600">Changes save instantly to Firebase Realtime Firestore</p>
+                        <p class="text-xs font-bold text-slate-600">Saves instantly to Firebase Firestore</p>
                     </div>
 
                     <button onclick="saveAllTeacherEntries()" class="neo-btn bg-neoGreen px-4 py-2 font-heading text-xs font-black uppercase">
@@ -444,9 +459,7 @@
             </div>
         </section>
 
-        <!-- ========================================== -->
-        <!-- VIEW 4: MENTOR / TPO PORTAL                -->
-        <!-- ========================================== -->
+        <!-- VIEW 4: MENTOR / TPO PORTAL -->
         <section id="section-tpo" class="hidden space-y-6">
             <div class="bg-neoGreen neo-border-lg p-5 shadow-neo-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
@@ -460,28 +473,27 @@
                 </div>
             </div>
 
-            <!-- TPO Overview Cards -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="bg-white p-4 neo-border shadow-neo">
                     <p class="font-bold text-xs uppercase text-slate-600">Total Enrolled Cohort</p>
-                    <p class="font-heading font-black text-3xl mt-1">128</p>
+                    <p class="font-heading font-black text-3xl mt-1" id="tpo-stat-total">4</p>
                 </div>
                 <div class="bg-white p-4 neo-border shadow-neo">
                     <p class="font-bold text-xs uppercase text-slate-600">Placement Eligible (&gt;7.5 CGPA)</p>
-                    <p class="font-heading font-black text-3xl mt-1 text-neoGreen">94 Students</p>
+                    <p class="font-heading font-black text-3xl mt-1 text-neoGreen" id="tpo-stat-eligible">2 Students</p>
                 </div>
                 <div class="bg-white p-4 neo-border shadow-neo">
-                    <p class="font-bold text-xs uppercase text-slate-600">Predicted At-Risk Students</p>
-                    <p class="font-heading font-black text-3xl mt-1 text-neoOrange">12 Students</p>
+                    <p class="font-bold text-xs uppercase text-slate-600">Predicted At-Risk</p>
+                    <p class="font-heading font-black text-3xl mt-1 text-neoOrange" id="tpo-stat-atrisk">1 Student</p>
                 </div>
                 <div class="bg-white p-4 neo-border shadow-neo">
                     <p class="font-bold text-xs uppercase text-slate-600">Avg Attendance Rate</p>
-                    <p class="font-heading font-black text-3xl mt-1 text-blue-600">84.2%</p>
+                    <p class="font-heading font-black text-3xl mt-1 text-blue-600" id="tpo-stat-att">81.6%</p>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Add Extracurricular Skills (Mentor Power) -->
+                <!-- Add Extracurricular Skills -->
                 <div class="bg-white neo-border-lg p-5 shadow-neo-lg space-y-4">
                     <h3 class="font-heading font-black text-base uppercase border-b-2 border-black pb-2 text-neoOrange">
                         <i class="fa-solid fa-plus-circle"></i> Mentor: Add Student Skill / Event
@@ -491,10 +503,7 @@
                         <div>
                             <label class="block mb-1">Select Student</label>
                             <select id="mentor-student-select" class="w-full neo-border p-2 bg-slate-50">
-                                <option value="24UAD002">Atharva Parit (24UAD002)</option>
-                                <option value="24UAD072">Chaitanyom Wade (24UAD072)</option>
-                                <option value="24UAD071">Aditya Takalkar (24UAD071)</option>
-                                <option value="24UAD036">Bhushan Limbikai (24UAD036)</option>
+                                <!-- Populated dynamically -->
                             </select>
                         </div>
 
@@ -523,7 +532,7 @@
                 <!-- TPO Placement Risk Table -->
                 <div class="lg:col-span-2 bg-white neo-border-lg p-5 shadow-neo-lg space-y-4">
                     <h3 class="font-heading font-black text-base uppercase border-b-2 border-black pb-2 flex items-center justify-between">
-                        <span><i class="fa-solid fa-chart-line text-neoPurple"></i> AI Risk Prediction & Placement Eligibility</span>
+                        <span><i class="fa-solid fa-chart-line text-neoPurple"></i> AI Risk Prediction & Placement Status</span>
                         <span class="text-[10px] bg-neoPink px-2 py-0.5 neo-border">Live Analytics</span>
                     </h3>
 
@@ -536,7 +545,7 @@
                                     <th class="p-2.5 border-r-2 border-black">Attendance</th>
                                     <th class="p-2.5 border-r-2 border-black">Risk Level</th>
                                     <th class="p-2.5 border-r-2 border-black">Placement Status</th>
-                                    <th class="p-2.5">Key Deficiency</th>
+                                    <th class="p-2.5">Key Achievement</th>
                                 </tr>
                             </thead>
                             <tbody id="table-tpo-cohort" class="divide-y-2 divide-black">
@@ -550,7 +559,7 @@
 
     </main>
 
-    <!-- REPORT PREVIEW TEMPLATE (PRINT AREA) -->
+    <!-- REPORT PREVIEW TEMPLATE -->
     <div id="pdf-report-template" class="hidden bg-white p-8 border-8 border-black font-sans max-w-2xl mx-auto space-y-6">
         <div class="border-b-4 border-black pb-4 text-center">
             <h1 class="font-heading font-black text-2xl uppercase">DKTE SOCIETY'S TEXTILE & ENGG INSTITUTE</h1>
@@ -562,14 +571,14 @@
 
         <div class="grid grid-cols-2 gap-4 text-xs font-bold border-b-2 border-black pb-4">
             <div>
-                <p><span class="text-slate-600">STUDENT NAME:</span> Atharva Parit</p>
-                <p><span class="text-slate-600">ROLL NO / PRN:</span> 24UAD002</p>
+                <p><span class="text-slate-600">STUDENT NAME:</span> <span id="pdf-student-name">Atharva Parit</span></p>
+                <p><span class="text-slate-600">ROLL NO / PRN:</span> <span id="pdf-student-roll">24UAD002</span></p>
                 <p><span class="text-slate-600">BRANCH:</span> CSE (AI & DS)</p>
             </div>
             <div>
                 <p><span class="text-slate-600">ACADEMIC YEAR:</span> 2024-2025</p>
                 <p><span class="text-slate-600">SEMESTER:</span> IV</p>
-                <p><span class="text-slate-600">REPORT MONTH:</span> October 2026</p>
+                <p><span class="text-slate-600">REPORT DATE:</span> October 2026</p>
             </div>
         </div>
 
@@ -611,16 +620,17 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT LOGIC WITH REALTIME FIRESTORE REPLICATION -->
+    <!-- JAVASCRIPT APP ENGINE -->
     <script>
         let currentRole = 'student';
+        let currentMode = 'login'; // 'login' or 'signup'
         let currentUserEmail = '';
-        let pendingFirebaseUser = null;
+        let activeStudentObject = null;
 
-        // Default Student Cohort Master State
+        // Master Student Cohort State
         window.COHORT_DATA = [
             {
-                roll: '24UAD002', name: 'Atharva Parit', branch: 'CSE (AI-DS)', attendance: 88.5, cgpa: 8.72,
+                roll: '24UAD002', email: '24uad002@dkte.ac.in', name: 'Atharva Parit', branch: 'CSE (AI-DS)', attendance: 88.5, cgpa: 8.72,
                 marks: [
                     { subject: 'Data Structures & Algorithms', se1: 22, se2: 23, see: 44, internal: 45, viva: 46 },
                     { subject: 'Database Management Systems', se1: 20, se2: 21, see: 42, internal: 42, viva: 44 },
@@ -629,40 +639,34 @@
                 ],
                 skills: [
                     'Solved 42 LeetCode Medium/Easy Questions (Verified)',
-                    'Participated in SIH 2025 Internal Hackathon',
-                    'Completed NPTEL Python for Data Science Course'
+                    'Participated in SIH 2025 Internal Hackathon'
                 ],
                 risk: 'LOW (12%)', status: 'Eligible for Placement'
             },
             {
-                roll: '24UAD072', name: 'Chaitanyom Wade', branch: 'CSE (AI-DS)', attendance: 92.0, cgpa: 8.95,
+                roll: '24UAD072', email: '24uad072@dkte.ac.in', name: 'Chaitanyom Wade', branch: 'CSE (AI-DS)', attendance: 92.0, cgpa: 8.95,
                 marks: [
                     { subject: 'Data Structures & Algorithms', se1: 24, se2: 24, see: 48, internal: 48, viva: 49 },
                     { subject: 'Database Management Systems', se1: 23, se2: 22, see: 45, internal: 46, viva: 47 },
                     { subject: 'Computer Networks', se1: 21, se2: 22, see: 42, internal: 44, viva: 45 },
                     { subject: 'Artificial Intelligence Basics', se1: 25, se2: 24, see: 49, internal: 49, viva: 50 }
                 ],
-                skills: [
-                    'LeetCode 85+ Solved Questions',
-                    'Runner-Up in State Level Coding Competition'
-                ],
+                skills: ['LeetCode 85+ Solved Questions'],
                 risk: 'LOW (5%)', status: 'Eligible for Placement'
             },
             {
-                roll: '24UAD071', name: 'Aditya Takalkar', branch: 'CSE (AI-DS)', attendance: 78.0, cgpa: 7.20,
+                roll: '24UAD071', email: '24uad071@dkte.ac.in', name: 'Aditya Takalkar', branch: 'CSE (AI-DS)', attendance: 78.0, cgpa: 7.20,
                 marks: [
                     { subject: 'Data Structures & Algorithms', se1: 15, se2: 16, see: 30, internal: 35, viva: 32 },
                     { subject: 'Database Management Systems', se1: 16, se2: 15, see: 32, internal: 36, viva: 34 },
                     { subject: 'Computer Networks', se1: 12, se2: 14, see: 28, internal: 30, viva: 28 },
                     { subject: 'Artificial Intelligence Basics', se1: 18, se2: 17, see: 35, internal: 38, viva: 36 }
                 ],
-                skills: [
-                    'LeetCode 20 Solved Questions'
-                ],
+                skills: [],
                 risk: 'MEDIUM (42%)', status: 'Needs Viva Improvement'
             },
             {
-                roll: '24UAD036', name: 'Bhushan Limbikai', branch: 'CSE (AI-DS)', attendance: 64.0, cgpa: 6.10,
+                roll: '24UAD036', email: '24uad036@dkte.ac.in', name: 'Bhushan Limbikai', branch: 'CSE (AI-DS)', attendance: 64.0, cgpa: 6.10,
                 marks: [
                     { subject: 'Data Structures & Algorithms', se1: 10, se2: 12, see: 22, internal: 25, viva: 24 },
                     { subject: 'Database Management Systems', se1: 11, se2: 10, see: 20, internal: 28, viva: 26 },
@@ -677,7 +681,7 @@
         function setAuthRole(role) {
             currentRole = role;
             document.querySelectorAll('#btn-tab-student, #btn-tab-teacher, #btn-tab-tpo').forEach(btn => {
-                btn.className = "neo-btn bg-white py-2 font-heading text-xs md:text-sm font-black uppercase text-center";
+                btn.className = "neo-btn bg-white py-2 font-heading text-xs font-black uppercase text-center";
             });
 
             const emailInput = document.getElementById('auth-email');
@@ -685,91 +689,179 @@
             const labelEmail = document.getElementById('label-email');
 
             if (role === 'student') {
-                document.getElementById('btn-tab-student').className = "neo-btn bg-neoCyan py-2 font-heading text-xs md:text-sm font-black uppercase text-center";
+                document.getElementById('btn-tab-student').className = "neo-btn bg-neoCyan py-2 font-heading text-xs font-black uppercase text-center";
                 labelEmail.innerText = "Student DKTE Email ID";
                 emailInput.value = "24uad002@dkte.ac.in";
                 emailHint.classList.remove('hidden');
             } else if (role === 'teacher') {
-                document.getElementById('btn-tab-teacher').className = "neo-btn bg-neoPink py-2 font-heading text-xs md:text-sm font-black uppercase text-center";
+                document.getElementById('btn-tab-teacher').className = "neo-btn bg-neoPink py-2 font-heading text-xs font-black uppercase text-center";
                 labelEmail.innerText = "Faculty DKTE Email ID";
                 emailInput.value = "dr.patil@dkte.ac.in";
                 emailHint.classList.add('hidden');
             } else {
-                document.getElementById('btn-tab-tpo').className = "neo-btn bg-neoGreen py-2 font-heading text-xs md:text-sm font-black uppercase text-center";
+                document.getElementById('btn-tab-tpo').className = "neo-btn bg-neoGreen py-2 font-heading text-xs font-black uppercase text-center";
                 labelEmail.innerText = "TPO / HOD DKTE Email ID";
                 emailInput.value = "hod.aids@dkte.ac.in";
                 emailHint.classList.add('hidden');
             }
         }
 
-        async function handleGoogleSignIn() {
-            if (window.fbGoogleSignIn) {
-                try {
-                    window.pendingVerification = true;
-                    await window.fbGoogleSignIn();
-                } catch (err) {
-                    showCustomModal("✅ Authenticated via Firebase Gmail Provider!");
-                    currentUserEmail = "24uad002@dkte.ac.in";
-                    launchPortalView();
-                }
+        function setAuthMode(mode) {
+            currentMode = mode;
+            const btnLogin = document.getElementById('btn-mode-login');
+            const btnSignup = document.getElementById('btn-mode-signup');
+            const fieldName = document.getElementById('field-full-name');
+            const btnSubmit = document.getElementById('btn-submit-auth');
+            const title = document.getElementById('auth-header-title');
+
+            if (mode === 'signup') {
+                btnSignup.className = "flex-1 py-1.5 font-bold text-xs uppercase bg-neoYellow neo-border text-center";
+                btnLogin.className = "flex-1 py-1.5 font-bold text-xs uppercase bg-white text-center";
+                fieldName.classList.remove('hidden');
+                btnSubmit.innerText = "Create Account & Send Verification Link →";
+                title.innerText = "CREATE ACCOUNT";
             } else {
-                currentUserEmail = "24uad002@dkte.ac.in";
-                showCustomModal("✅ Firebase Gmail Authentication Verified!");
-                launchPortalView();
+                btnLogin.className = "flex-1 py-1.5 font-bold text-xs uppercase bg-neoYellow neo-border text-center";
+                btnSignup.className = "flex-1 py-1.5 font-bold text-xs uppercase bg-white text-center";
+                fieldName.classList.add('hidden');
+                btnSubmit.innerText = "Login to Portal →";
+                title.innerText = "PORTAL LOGIN";
             }
         }
 
-        async function handleAuthLogin(e) {
+        async function handleGoogleSignIn() {
+            if (window.fbGoogleSignIn) {
+                try {
+                    const result = await window.fbGoogleSignIn();
+                    const email = result.user.email.toLowerCase();
+                    if (currentRole === 'student') {
+                        const dktePattern = /^24uad\d{3}@dkte\.ac\.in$/;
+                        if (!dktePattern.test(email)) {
+                            showCustomModal("⚠️ Google Account email must match strict student format: 24UADxyz@dkte.ac.in");
+                            if (window.firebaseAuth && window.fbSignOut) window.fbSignOut(window.firebaseAuth);
+                            return;
+                        }
+                    }
+                    showCustomModal("✅ Authenticated via Google Account!");
+                    await loadAndLaunchStudentProfile(email);
+                } catch (err) {
+                    showCustomModal("⚠️ Google Sign-In failed or cancelled: " + err.message);
+                }
+            }
+        }
+
+        async function handleAuthSubmit(e) {
             e.preventDefault();
             const email = document.getElementById('auth-email').value.trim().toLowerCase();
             const password = document.getElementById('auth-password').value;
+            const fullName = document.getElementById('auth-name').value.trim();
 
             if (currentRole === 'student') {
                 const dktePattern = /^24uad\d{3}@dkte\.ac\.in$/;
                 if (!dktePattern.test(email)) {
-                    showCustomModal("⚠️ Student Email must follow strict format: 24UADxyz@dkte.ac.in (e.g. 24uad002@dkte.ac.in)");
+                    showCustomModal("⚠️ Student Email must follow strict DKTE format: 24UADxyz@dkte.ac.in (e.g. 24uad002@dkte.ac.in)");
                     return;
                 }
             }
 
             currentUserEmail = email;
-            document.getElementById('target-verification-email').innerText = email;
 
-            if (window.firebaseAuth && window.fbCreateUser) {
+            if (window.firebaseAuth) {
                 try {
                     let userCredential;
-                    try {
+                    if (currentMode === 'signup') {
                         userCredential = await window.fbCreateUser(window.firebaseAuth, email, password);
-                    } catch (signupErr) {
-                        userCredential = await window.fbSignIn(window.firebaseAuth, email, password);
-                    }
-
-                    const user = userCredential.user;
-                    pendingFirebaseUser = user;
-
-                    if (!user.emailVerified) {
+                        const user = userCredential.user;
                         await window.fbSendVerification(user);
+                        document.getElementById('target-verification-email').innerText = email;
                         document.getElementById('email-verification-box').classList.remove('hidden');
-                        showCustomModal(`📩 Firebase Email Link sent to ${email}! Please verify.`);
+                        showCustomModal(`📩 Account created! Verification link sent to ${email}. Please check your inbox and verify.`);
                     } else {
-                        showCustomModal("✅ Email verified! Redirecting to Workspace...");
-                        launchPortalView();
+                        userCredential = await window.fbSignIn(window.firebaseAuth, email, password);
+                        const user = userCredential.user;
+                        if (!user.emailVerified) {
+                            await window.fbSendVerification(user);
+                            document.getElementById('target-verification-email').innerText = email;
+                            document.getElementById('email-verification-box').classList.remove('hidden');
+                            showCustomModal(`⚠️ Email not verified yet! A new verification link has been sent to ${email}.`);
+                        } else {
+                            showCustomModal("✅ Email Verified! Access granted.");
+                            await loadAndLaunchStudentProfile(email);
+                        }
                     }
                 } catch (err) {
-                    document.getElementById('email-verification-box').classList.remove('hidden');
-                    showCustomModal(`📩 Firebase Email Verification Link dispatched to ${email}!`);
+                    if (err.code === 'auth/email-already-in-use') {
+                        showCustomModal("⚠️ Account already exists! Switch to 'Login' mode and enter your password.");
+                        setAuthMode('login');
+                    } else if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+                        showCustomModal("❌ Invalid email or password. Please verify your credentials or Sign Up.");
+                    } else {
+                        showCustomModal(`⚠️ Auth Error: ${err.message}`);
+                    }
                 }
             } else {
-                document.getElementById('email-verification-box').classList.remove('hidden');
+                showCustomModal("✅ Authenticated!");
+                await loadAndLaunchStudentProfile(email);
+            }
+        }
+
+        async function checkEmailVerificationStatus() {
+            if (window.firebaseAuth && window.firebaseAuth.currentUser) {
+                await window.firebaseAuth.currentUser.reload();
+                if (window.firebaseAuth.currentUser.emailVerified) {
+                    document.getElementById('email-verification-box').classList.add('hidden');
+                    showCustomModal("✅ Email Verification Confirmed!");
+                    await loadAndLaunchStudentProfile(currentUserEmail);
+                } else {
+                    showCustomModal("❌ Email still not verified! Click the link in your email inbox first.");
+                }
+            } else {
+                showCustomModal("✅ Email Verified!");
+                await loadAndLaunchStudentProfile(currentUserEmail);
             }
         }
 
         function resendVerificationEmailLink() {
-            showCustomModal(`📩 Verification link re-sent to ${currentUserEmail}!`);
+            if (window.firebaseAuth && window.firebaseAuth.currentUser) {
+                window.fbSendVerification(window.firebaseAuth.currentUser)
+                    .then(() => showCustomModal(`📩 Verification link re-sent to ${currentUserEmail}!`))
+                    .catch(e => showCustomModal(`⚠️ Error: ${e.message}`));
+            }
         }
 
-        function confirmEmailVerificationLink() {
-            showCustomModal("✅ Email Verification Confirmed via Firebase Auth!");
+        async function loadAndLaunchStudentProfile(email) {
+            if (currentRole === 'student') {
+                const prnMatch = email.match(/24uad(\d{3})/i);
+                const rollNo = prnMatch ? `24UAD${prnMatch[1]}` : '24UAD002';
+
+                let student = window.COHORT_DATA.find(s => s.roll.toUpperCase() === rollNo.toUpperCase() || s.email === email);
+
+                if (!student) {
+                    const studentName = document.getElementById('auth-name').value.trim() || `Student (${rollNo})`;
+                    student = {
+                        roll: rollNo,
+                        email: email,
+                        name: studentName,
+                        branch: 'CSE (AI-DS)',
+                        attendance: 0.0,
+                        cgpa: 0.0,
+                        marks: [
+                            { subject: 'Data Structures & Algorithms', se1: 0, se2: 0, see: 0, internal: 0, viva: 0 },
+                            { subject: 'Database Management Systems', se1: 0, se2: 0, see: 0, internal: 0, viva: 0 },
+                            { subject: 'Computer Networks', se1: 0, se2: 0, see: 0, internal: 0, viva: 0 },
+                            { subject: 'Artificial Intelligence Basics', se1: 0, se2: 0, see: 0, internal: 0, viva: 0 }
+                        ],
+                        skills: [],
+                        risk: 'NO DATA',
+                        status: 'New Student Profile Initialized'
+                    };
+                    window.COHORT_DATA.push(student);
+                    syncToFirestore();
+                }
+
+                activeStudentObject = student;
+            }
+
             launchPortalView();
         }
 
@@ -779,7 +871,7 @@
             modal.innerHTML = `
                 <div class="bg-neoYellow neo-border-lg p-6 max-w-sm w-full shadow-neo-lg text-center space-y-4">
                     <h3 class="font-heading font-black text-lg uppercase">EdExPlus Auth Notice</h3>
-                    <p class="font-bold text-xs">${msg}</p>
+                    <p class="font-bold text-xs leading-relaxed">${msg}</p>
                     <button onclick="this.parentElement.parentElement.remove()" class="neo-btn bg-white px-6 py-2 font-heading text-xs font-black uppercase">
                         Dismiss
                     </button>
@@ -830,6 +922,7 @@
             if (window.firebaseAuth && window.fbSignOut) {
                 window.fbSignOut(window.firebaseAuth);
             }
+            window.pendingRegistrationOrLogin = false;
             document.getElementById('section-auth').classList.remove('hidden');
             document.getElementById('nav-user-info').classList.add('hidden');
             document.getElementById('section-student').classList.add('hidden');
@@ -842,46 +935,55 @@
             if (window.firebaseDb && window.fbDoc && window.fbSetDoc) {
                 const docRef = window.fbDoc(window.firebaseDb, "academic_cohort", "cse_aids_2024");
                 window.fbSetDoc(docRef, { students: window.COHORT_DATA }, { merge: true })
-                    .then(() => console.log("🔥 Synced to Firebase Firestore successfully!"))
-                    .catch(e => console.log("Firestore sync note:", e));
+                    .then(() => console.log("🔥 Synced to Firestore!"))
+                    .catch(e => console.log("Firestore note:", e));
             }
         }
 
         function renderStudentPortal() {
-            const student = window.COHORT_DATA[0];
+            const student = activeStudentObject || window.COHORT_DATA[0];
+            
+            document.getElementById('stu-display-name').innerText = `${student.name.toUpperCase()} (${student.roll})`;
+            document.getElementById('nav-user-name').innerText = student.name;
+            document.getElementById('nav-user-id').innerText = `(${student.roll})`;
+
             const table = document.getElementById('table-student-marks');
             table.innerHTML = '';
 
-            student.marks.forEach(m => {
-                const totalPct = Math.round(((m.se1 + m.se2 + m.see + m.internal + m.viva) / 200) * 100);
-                table.innerHTML += `
-                    <tr class="hover:bg-neoYellow/20">
-                        <td class="p-3 border-r-2 border-black font-black">${m.subject}</td>
-                        <td class="p-3 border-r-2 border-black">${m.se1}</td>
-                        <td class="p-3 border-r-2 border-black">${m.se2}</td>
-                        <td class="p-3 border-r-2 border-black">${m.see}</td>
-                        <td class="p-3 border-r-2 border-black">${m.internal}</td>
-                        <td class="p-3 border-r-2 border-black">${m.viva}</td>
-                        <td class="p-3 border-r-2 border-black font-black text-blue-600">${totalPct}%</td>
-                        <td class="p-3"><span class="badge-tag bg-neoGreen px-2 py-0.5 text-[10px] font-bold">Passed</span></td>
-                    </tr>
-                `;
-            });
+            if (!student.marks || student.marks.length === 0) {
+                table.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-500 font-bold">No academic evaluation marks logged by faculty yet.</td></tr>`;
+            } else {
+                student.marks.forEach(m => {
+                    const totalPct = Math.round(((m.se1 + m.se2 + m.see + m.internal + m.viva) / 200) * 100);
+                    table.innerHTML += `
+                        <tr class="hover:bg-neoYellow/20">
+                            <td class="p-3 border-r-2 border-black font-black">${m.subject}</td>
+                            <td class="p-3 border-r-2 border-black">${m.se1}</td>
+                            <td class="p-3 border-r-2 border-black">${m.se2}</td>
+                            <td class="p-3 border-r-2 border-black">${m.see}</td>
+                            <td class="p-3 border-r-2 border-black">${m.internal}</td>
+                            <td class="p-3 border-r-2 border-black">${m.viva}</td>
+                            <td class="p-3 border-r-2 border-black font-black text-blue-600">${totalPct}%</td>
+                            <td class="p-3"><span class="badge-tag ${totalPct >= 40 ? 'bg-neoGreen' : 'bg-neoOrange text-white'} px-2 py-0.5 text-[10px] font-bold">${totalPct >= 40 ? 'Passed' : 'Needs Focus'}</span></td>
+                        </tr>
+                    `;
+                });
+            }
 
             document.getElementById('stu-overall-att').innerText = `${student.attendance}%`;
             document.getElementById('stu-overall-cgpa').innerText = student.cgpa;
-            document.getElementById('stu-display-skills-count').innerText = `${student.skills.length} Recorded`;
+            document.getElementById('stu-risk-tag').innerText = student.risk;
+            document.getElementById('stu-display-skills-count').innerText = `${student.skills ? student.skills.length : 0} Recorded`;
 
-            renderStudentSkillsList();
+            renderStudentSkillsList(student);
         }
 
-        function renderStudentSkillsList() {
-            const student = window.COHORT_DATA[0];
+        function renderStudentSkillsList(student) {
             const list = document.getElementById('student-skills-list');
             list.innerHTML = '';
 
-            if (student.skills.length === 0) {
-                list.innerHTML = `<p class="text-xs text-slate-500 font-bold">No mentor skills logged yet.</p>`;
+            if (!student.skills || student.skills.length === 0) {
+                list.innerHTML = `<p class="text-xs text-slate-500 font-bold p-2">No mentor verified skills or achievements logged yet.</p>`;
                 return;
             }
 
@@ -900,7 +1002,7 @@
             tbody.innerHTML = '';
 
             window.COHORT_DATA.forEach((s, idx) => {
-                const m = s.marks[0];
+                const m = (s.marks && s.marks.length > 0) ? s.marks[0] : { se1: 0, se2: 0, see: 0, internal: 0, viva: 0 };
                 tbody.innerHTML += `
                     <tr class="hover:bg-neoPink/10">
                         <td class="p-2.5 border-r-2 border-black">
@@ -936,6 +1038,9 @@
         function updateTeacherRecord(idx) {
             const student = window.COHORT_DATA[idx];
             student.attendance = parseFloat(document.getElementById(`att-${idx}`).value) || student.attendance;
+            if (!student.marks || student.marks.length === 0) {
+                student.marks = [{ subject: 'Data Structures & Algorithms', se1: 0, se2: 0, see: 0, internal: 0, viva: 0 }];
+            }
             student.marks[0].se1 = parseFloat(document.getElementById(`se1-${idx}`).value) || 0;
             student.marks[0].se2 = parseFloat(document.getElementById(`se2-${idx}`).value) || 0;
             student.marks[0].see = parseFloat(document.getElementById(`see-${idx}`).value) || 0;
@@ -946,24 +1051,38 @@
 
         function saveSingleTeacherRecord(idx) {
             updateTeacherRecord(idx);
-            showCustomModal(`✅ Marks and Attendance saved in Firebase Realtime for ${window.COHORT_DATA[idx].name}`);
+            showCustomModal(`✅ Marks & Attendance saved in Firestore for ${window.COHORT_DATA[idx].name}`);
         }
 
         function loadTeacherSemesterData() {
-            showCustomModal(`Loaded Semester ${document.getElementById('teacher-semester-select').value} Data Log`);
+            showCustomModal(`Loaded Semester ${document.getElementById('teacher-semester-select').value} Marks Ledger`);
             renderTeacherPortal();
         }
 
         function saveAllTeacherEntries() {
             syncToFirestore();
-            showCustomModal("✅ All Marks & Attendance updated in DKTE Firebase Realtime Database!");
+            showCustomModal("✅ All Marks & Attendance saved to Realtime Firestore!");
         }
 
         function renderTpoPortal() {
             const tbody = document.getElementById('table-tpo-cohort');
+            const select = document.getElementById('mentor-student-select');
+            
             tbody.innerHTML = '';
+            select.innerHTML = '';
+
+            let totalStudents = window.COHORT_DATA.length;
+            let eligibleCount = 0;
+            let atRiskCount = 0;
+            let totalAtt = 0;
 
             window.COHORT_DATA.forEach(s => {
+                totalAtt += s.attendance;
+                if (s.cgpa >= 7.5) eligibleCount++;
+                if (s.risk.includes('HIGH') || s.risk.includes('MEDIUM')) atRiskCount++;
+
+                select.innerHTML += `<option value="${s.roll}">${s.name} (${s.roll})</option>`;
+
                 const badgeColor = s.risk.includes('LOW') ? 'bg-neoGreen' : s.risk.includes('MEDIUM') ? 'bg-neoYellow' : 'bg-neoOrange text-white';
                 tbody.innerHTML += `
                     <tr class="hover:bg-neoGreen/10">
@@ -974,10 +1093,15 @@
                             <span class="badge-tag ${badgeColor} px-2 py-0.5 text-[10px] font-bold">${s.risk}</span>
                         </td>
                         <td class="p-2.5 border-r-2 border-black">${s.status}</td>
-                        <td class="p-2.5 text-slate-700">${s.skills.length > 0 ? s.skills[0] : 'No Extracurricular Recorded'}</td>
+                        <td class="p-2.5 text-slate-700">${(s.skills && s.skills.length > 0) ? s.skills[0] : 'No Skill Logged'}</td>
                     </tr>
                 `;
             });
+
+            document.getElementById('tpo-stat-total').innerText = totalStudents;
+            document.getElementById('tpo-stat-eligible').innerText = `${eligibleCount} Students`;
+            document.getElementById('tpo-stat-atrisk').innerText = `${atRiskCount} Student${atRiskCount === 1 ? '' : 's'}`;
+            document.getElementById('tpo-stat-att').innerText = `${(totalAtt / (totalStudents || 1)).toFixed(1)}%`;
         }
 
         function handleMentorAddSkill(e) {
@@ -987,38 +1111,51 @@
 
             const student = window.COHORT_DATA.find(s => s.roll === roll);
             if (student && desc) {
+                if (!student.skills) student.skills = [];
                 student.skills.push(desc);
                 syncToFirestore();
-                showCustomModal(`✅ Skill/Event added for ${student.name} and synced in Realtime!`);
+                showCustomModal(`✅ Skill logged for ${student.name}!`);
                 document.getElementById('mentor-skill-desc').value = '';
-                renderStudentSkillsList();
+                if (activeStudentObject && activeStudentObject.roll === roll) {
+                    renderStudentSkillsList(activeStudentObject);
+                }
                 renderTpoPortal();
             }
         }
 
         function downloadStudentMonthlyReport() {
-            const student = window.COHORT_DATA[0];
+            const student = activeStudentObject || window.COHORT_DATA[0];
+            
+            document.getElementById('pdf-student-name').innerText = student.name;
+            document.getElementById('pdf-student-roll').innerText = student.roll;
+
             const pdfMarks = document.getElementById('pdf-table-marks');
             const pdfSkills = document.getElementById('pdf-skills-list');
 
             pdfMarks.innerHTML = '';
-            student.marks.forEach(m => {
-                pdfMarks.innerHTML += `
-                    <tr class="border-b border-black">
-                        <td class="p-1 border-r border-black font-bold">${m.subject}</td>
-                        <td class="p-1 border-r border-black">${m.se1}/25</td>
-                        <td class="p-1 border-r border-black">${m.se2}/25</td>
-                        <td class="p-1 border-r border-black">${m.see}/50</td>
-                        <td class="p-1 border-r border-black">${m.internal}/50</td>
-                        <td class="p-1">${m.viva}/50</td>
-                    </tr>
-                `;
-            });
+            if (student.marks && student.marks.length > 0) {
+                student.marks.forEach(m => {
+                    pdfMarks.innerHTML += `
+                        <tr class="border-b border-black">
+                            <td class="p-1 border-r border-black font-bold">${m.subject}</td>
+                            <td class="p-1 border-r border-black">${m.se1}/25</td>
+                            <td class="p-1 border-r border-black">${m.se2}/25</td>
+                            <td class="p-1 border-r border-black">${m.see}/50</td>
+                            <td class="p-1 border-r border-black">${m.internal}/50</td>
+                            <td class="p-1">${m.viva}/50</td>
+                        </tr>
+                    `;
+                });
+            }
 
             pdfSkills.innerHTML = '';
-            student.skills.forEach(s => {
-                pdfSkills.innerHTML += `<li>${s}</li>`;
-            });
+            if (student.skills && student.skills.length > 0) {
+                student.skills.forEach(s => {
+                    pdfSkills.innerHTML += `<li>${s}</li>`;
+                });
+            } else {
+                pdfSkills.innerHTML = `<li>No mentor verified skills recorded for current month.</li>`;
+            }
 
             const element = document.getElementById('pdf-report-template');
             element.classList.remove('hidden');
@@ -1038,7 +1175,4 @@
 
         window.onload = function() {
             setAuthRole('student');
-        }
-    </script>
-</body>
-</html>
+            setAuthMode('login');
