@@ -621,104 +621,89 @@
 
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : userProvidedConfig;
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        try {
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
 
-        window.firebaseApp = app;
-        window.firebaseAuth = auth;
-        window.firebaseDb = db;
-        window.fbCreateUser = createUserWithEmailAndPassword;
-        window.fbSignIn = signInWithEmailAndPassword;
-        window.fbSendEmailVerification = sendEmailVerification;
-        window.fbDoc = doc;
-        window.fbSetDoc = setDoc;
-        window.fbGetDoc = getDoc;
-        window.fbCollection = collection;
-        window.fbGetDocs = getDocs;
-        window.fbDeleteDoc = deleteDoc;
+            window.firebaseApp = app;
+            window.firebaseAuth = auth;
+            window.firebaseDb = db;
+            window.fbCreateUser = createUserWithEmailAndPassword;
+            window.fbSignIn = signInWithEmailAndPassword;
+            window.fbSendEmailVerification = sendEmailVerification;
+            window.fbDoc = doc;
+            window.fbSetDoc = setDoc;
+            window.fbGetDoc = getDoc;
+            window.fbCollection = collection;
+            window.fbGetDocs = getDocs;
+            window.fbDeleteDoc = deleteDoc;
 
-        function getCloudCol(colName) {
-            return collection(db, 'artifacts', appId, 'public', 'data', colName);
-        }
-
-        function getCloudDoc(colName, docId) {
-            return doc(db, 'artifacts', appId, 'public', 'data', colName, docId);
-        }
-
-        window.getCloudCol = getCloudCol;
-        window.getCloudDoc = getCloudDoc;
-
-        // Initialize Realtime Listeners with Permission-Denied Error Guardrails
-        async function initCloudSync() {
-            try {
-                // Students sync
-                onSnapshot(getCloudCol('students'), (snap) => {
-                    const list = [];
-                    snap.forEach(d => list.push(d.data()));
-                    if (list.length > 0) {
-                        window.SYSTEM_STUDENTS = list;
-                        dbSet('students', list);
-                        if (window.currentRole === 'hod') window.renderHodStudentRoster();
-                        if (window.currentRole === 'teacher') window.renderTeacherView();
-                        if (window.currentRole === 'tpo') window.renderTpoView();
-                    }
-                }, (err) => {
-                    console.warn("Firestore Notice (Students): Using local fallback cache due to rules.");
-                });
-
-                // HODs sync
-                onSnapshot(getCloudCol('hods'), (snap) => {
-                    const list = [];
-                    snap.forEach(d => list.push(d.data()));
-                    if (list.length > 0) {
-                        window.SYSTEM_HODS = list;
-                        dbSet('hods', list);
-                        if (window.currentRole === 'admin') window.renderAdminHodTable();
-                    }
-                }, (err) => {
-                    console.warn("Firestore Notice (HODs): Using local fallback cache.");
-                });
-
-                // TPOs sync
-                onSnapshot(getCloudCol('tpos'), (snap) => {
-                    const list = [];
-                    snap.forEach(d => list.push(d.data()));
-                    if (list.length > 0) {
-                        window.SYSTEM_TPOS = list;
-                        dbSet('tpos', list);
-                        if (window.currentRole === 'admin') window.renderAdminTpoTable();
-                    }
-                }, (err) => {
-                    console.warn("Firestore Notice (TPOs): Using local fallback cache.");
-                });
-
-                // Teachers sync
-                onSnapshot(getCloudCol('teachers'), (snap) => {
-                    const list = [];
-                    snap.forEach(d => list.push(d.data()));
-                    if (list.length > 0) {
-                        window.SYSTEM_TEACHERS = list;
-                        dbSet('teachers', list);
-                        if (window.currentRole === 'hod') window.renderHodTeacherTable();
-                    }
-                }, (err) => {
-                    console.warn("Firestore Notice (Teachers): Using local fallback cache.");
-                });
-
-                // Subjects sync
-                const subDocRef = getCloudDoc('config', 'dept_subjects');
-                const subSnap = await getDoc(subDocRef);
-                if (subSnap.exists()) {
-                    window.DEPT_SUBJECTS = subSnap.data().subjects || window.DEPT_SUBJECTS;
-                    dbSet('dept_subjects', window.DEPT_SUBJECTS);
-                }
-            } catch (err) {
-                console.warn("Cloud Firestore Sync Warning (Using local persistent cache):", err);
+            function getCloudCol(colName) {
+                return collection(db, 'artifacts', appId, 'public', 'data', colName);
             }
-        }
 
-        initCloudSync();
+            function getCloudDoc(colName, docId) {
+                return doc(db, 'artifacts', appId, 'public', 'data', colName, docId);
+            }
+
+            window.getCloudCol = getCloudCol;
+            window.getCloudDoc = getCloudDoc;
+
+            // Initialize Realtime Listeners with Permission-Denied Error Guardrails
+            onSnapshot(getCloudCol('students'), (snap) => {
+                const list = [];
+                snap.forEach(d => list.push(d.data()));
+                if (list.length > 0) {
+                    window.SYSTEM_STUDENTS = list;
+                    dbSet('students', list);
+                    if (window.currentRole === 'hod') window.renderHodStudentRoster();
+                    if (window.currentRole === 'teacher') window.renderTeacherView();
+                    if (window.currentRole === 'tpo') window.renderTpoView();
+                }
+            }, (err) => {
+                console.warn("Firestore Notice (Students): Using local fallback cache.");
+            });
+
+            onSnapshot(getCloudCol('hods'), (snap) => {
+                const list = [];
+                snap.forEach(d => list.push(d.data()));
+                if (list.length > 0) {
+                    window.SYSTEM_HODS = list;
+                    dbSet('hods', list);
+                    if (window.currentRole === 'admin') window.renderAdminHodTable();
+                }
+            }, (err) => {
+                console.warn("Firestore Notice (HODs): Using local fallback cache.");
+            });
+
+            onSnapshot(getCloudCol('tpos'), (snap) => {
+                const list = [];
+                snap.forEach(d => list.push(d.data()));
+                if (list.length > 0) {
+                    window.SYSTEM_TPOS = list;
+                    dbSet('tpos', list);
+                    if (window.currentRole === 'admin') window.renderAdminTpoTable();
+                }
+            }, (err) => {
+                console.warn("Firestore Notice (TPOs): Using local fallback cache.");
+            });
+
+            onSnapshot(getCloudCol('teachers'), (snap) => {
+                const list = [];
+                snap.forEach(d => list.push(d.data()));
+                if (list.length > 0) {
+                    window.SYSTEM_TEACHERS = list;
+                    dbSet('teachers', list);
+                    if (window.currentRole === 'hod') window.renderHodTeacherTable();
+                }
+            }, (err) => {
+                console.warn("Firestore Notice (Teachers): Using local fallback cache.");
+            });
+
+        } catch (initErr) {
+            console.warn("Firebase Init Warning (Running in offline resilient mode):", initErr);
+        }
     </script>
 
     <script>
@@ -762,8 +747,13 @@
             password: 'edexplus@112233'
         };
 
-        let SYSTEM_HODS = dbGet('hods', []);
-        let SYSTEM_TPOS = dbGet('tpos', []);
+        let SYSTEM_HODS = dbGet('hods', [
+            { id: 'hod_aids_gmail_com', name: 'Prof. T.I. Bagban', dept: 'CSE (AI-DS)', email: 'aids@gmail.com', password: 'password123' },
+            { id: 'hod_aiml_gmail_com', name: 'Prof. Narendra Modi', dept: 'CSE (AI-ML)', email: 'aiml@gmail.com', password: 'password123' }
+        ]);
+        let SYSTEM_TPOS = dbGet('tpos', [
+            { id: 'tpo_aids_com', name: 'Prof. TPO', email: 'tpo@aids.com', password: 'password123' }
+        ]);
         let SYSTEM_TEACHERS = dbGet('teachers', []);
         let SYSTEM_STUDENTS = dbGet('students', [
             {
@@ -837,6 +827,7 @@
                 emailHint.classList.add('hidden');
             }
         }
+        window.setAuthRole = setAuthRole;
 
         function toggleSignupMode(showSignup) {
             if (showSignup) {
@@ -851,6 +842,7 @@
                 document.getElementById('auth-subtitle').innerText = "Select Role & Access Workspace";
             }
         }
+        window.toggleSignupMode = toggleSignupMode;
 
         async function handleAuthLogin(e) {
             e.preventDefault();
@@ -928,6 +920,7 @@
                 launchPortal('student');
             }
         }
+        window.handleAuthLogin = handleAuthLogin;
 
         async function handleStudentSignup(e) {
             e.preventDefault();
@@ -989,6 +982,7 @@
             alert(`✅ Signup Successful for ${name}! Please login.`);
             toggleSignupMode(false);
         }
+        window.handleStudentSignup = handleStudentSignup;
 
         // Admin HOD Save
         async function handleSaveHOD(e) {
@@ -1017,6 +1011,7 @@
             resetAdminHodForm();
             renderAdminHodTable();
         }
+        window.handleSaveHOD = handleSaveHOD;
 
         function resetAdminHodForm() {
             document.getElementById('admin-hod-id').value = '';
@@ -1036,6 +1031,7 @@
             document.getElementById('admin-hod-password').value = h.password;
             document.getElementById('btn-save-hod').innerText = 'Update HOD Credential';
         }
+        window.editHod = editHod;
 
         async function deleteHod(id) {
             if (confirm("Delete this HOD credential?")) {
@@ -1047,6 +1043,7 @@
                 renderAdminHodTable();
             }
         }
+        window.deleteHod = deleteHod;
 
         function renderAdminHodTable() {
             const tbody = document.getElementById('table-admin-hods');
@@ -1067,6 +1064,7 @@
                 `;
             });
         }
+        window.renderAdminHodTable = renderAdminHodTable;
 
         // Admin TPO Save
         async function handleSaveTPO(e) {
@@ -1094,6 +1092,7 @@
             resetAdminTpoForm();
             renderAdminTpoTable();
         }
+        window.handleSaveTPO = handleSaveTPO;
 
         function resetAdminTpoForm() {
             document.getElementById('admin-tpo-id').value = '';
@@ -1112,6 +1111,7 @@
             document.getElementById('admin-tpo-password').value = t.password;
             document.getElementById('btn-save-tpo').innerText = 'Update TPO Credential';
         }
+        window.editTpo = editTpo;
 
         async function deleteTpo(id) {
             if (confirm("Delete this TPO credential?")) {
@@ -1123,6 +1123,7 @@
                 renderAdminTpoTable();
             }
         }
+        window.deleteTpo = deleteTpo;
 
         function renderAdminTpoTable() {
             const tbody = document.getElementById('table-admin-tpos');
@@ -1142,6 +1143,7 @@
                 `;
             });
         }
+        window.renderAdminTpoTable = renderAdminTpoTable;
 
         async function handleAddDepartmentSubject(e) {
             e.preventDefault();
@@ -1170,6 +1172,7 @@
             document.getElementById('hod-subject-name').value = '';
             populateHodSubjectDropdown();
         }
+        window.handleAddDepartmentSubject = handleAddDepartmentSubject;
 
         function populateHodSubjectDropdown() {
             const subSelect = document.getElementById('hod-teacher-subject');
@@ -1190,6 +1193,7 @@
             const batchWrapper = document.getElementById('hod-batch-selection-wrapper');
             batchWrapper.style.display = (subType === 'Theory') ? 'none' : 'block';
         }
+        window.handleHodSubjectSelectionChange = handleHodSubjectSelectionChange;
 
         async function handleHodSaveTeacher(e) {
             e.preventDefault();
@@ -1237,6 +1241,7 @@
             resetHodTeacherForm();
             renderHodTeacherTable();
         }
+        window.handleHodSaveTeacher = handleHodSaveTeacher;
 
         function resetHodTeacherForm() {
             document.getElementById('hod-teacher-id').value = '';
@@ -1255,6 +1260,7 @@
             document.getElementById('hod-teacher-password').value = t.password;
             document.getElementById('btn-save-teacher').innerText = 'Update Faculty Credentials';
         }
+        window.editTeacher = editTeacher;
 
         async function deleteTeacher(id) {
             if (confirm("Remove this faculty member?")) {
@@ -1266,6 +1272,7 @@
                 renderHodTeacherTable();
             }
         }
+        window.deleteTeacher = deleteTeacher;
 
         async function deleteFacultyCourse(teacherId, courseIndex) {
             const teacher = SYSTEM_TEACHERS.find(t => t.id === teacherId || t.email === teacherId);
@@ -1281,6 +1288,7 @@
             syncAllDB();
             renderHodTeacherTable();
         }
+        window.deleteFacultyCourse = deleteFacultyCourse;
 
         function renderHodTeacherTable() {
             const tbody = document.getElementById('table-hod-teachers');
@@ -1311,6 +1319,7 @@
                 `;
             });
         }
+        window.renderHodTeacherTable = renderHodTeacherTable;
 
         function renderHodStudentRoster() {
             const tbody = document.getElementById('table-hod-students');
@@ -1331,6 +1340,7 @@
                 `;
             });
         }
+        window.renderHodStudentRoster = renderHodStudentRoster;
 
         async function reassignStudentBatch(roll) {
             const student = SYSTEM_STUDENTS.find(s => s.roll === roll);
@@ -1346,6 +1356,7 @@
                 alert(`✅ Batch updated to ${student.batch} for ${student.name}`);
             }
         }
+        window.reassignStudentBatch = reassignStudentBatch;
 
         function launchPortal(role) {
             currentRole = role;
@@ -1401,6 +1412,7 @@
                 renderTpoView();
             }
         }
+        window.launchPortal = launchPortal;
 
         function populateTeacherSubjectSelector() {
             const select = document.getElementById('teacher-active-subject-select');
@@ -1421,6 +1433,7 @@
             document.getElementById('teacher-profile-sub').innerText = `Active Course: ${active.subject} • Target: ${active.batch}`;
             renderTeacherView();
         }
+        window.handleTeacherSubjectChange = handleTeacherSubjectChange;
 
         function renderTeacherView() {
             const select = document.getElementById('teacher-active-subject-select');
@@ -1441,6 +1454,7 @@
                 renderTeacherMarksView(active);
             }
         }
+        window.renderTeacherView = renderTeacherView;
 
         function renderTeacherMarksView(active) {
             const tbody = document.getElementById('table-teacher-entry');
@@ -1537,6 +1551,7 @@
             syncAllDB();
             alert(`✅ Mentorship record updated for ${student.name}!`);
         }
+        window.saveStudentMentoringData = saveStudentMentoringData;
 
         async function saveStudentMarks(roll, subjectName) {
             const student = SYSTEM_STUDENTS.find(s => s.roll === roll);
@@ -1562,6 +1577,7 @@
             syncAllDB();
             alert(`✅ Marks updated for ${student.name}`);
         }
+        window.saveStudentMarks = saveStudentMarks;
 
         function renderStudentView() {
             const table = document.getElementById('table-student-marks');
@@ -1597,6 +1613,7 @@
                 });
             }
         }
+        window.renderStudentView = renderStudentView;
 
         async function renderTpoView() {
             const tbody = document.getElementById('table-tpo-cohort');
@@ -1606,7 +1623,7 @@
             for (const s of SYSTEM_STUDENTS) {
                 let placementTier = 'Core / Service Companies';
                 try {
-                    const placeRes = await fetch('http://127.0.0.1:5000/api/predict_placement', {
+                    const placeRes = await fetch('https://edexplus.onrender.com/api/predict_placement', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -1634,6 +1651,7 @@
                 `;
             }
         }
+        window.renderTpoView = renderTpoView;
 
         function downloadStudentMonthlyReport() {
             document.getElementById('pdf-stu-name').innerText = loggedInUser.name || '';
@@ -1667,13 +1685,7 @@
                 element.classList.add('hidden');
             });
         }
-
-        window.saveStudentMentoringData = saveStudentMentoringData;
-        window.renderHodStudentRoster = renderHodStudentRoster;
-        window.renderTeacherView = renderTeacherView;
-        window.renderTpoView = renderTpoView;
-        window.renderStudentView = renderStudentView;
-        window.saveStudentMarks = saveStudentMarks;
+        window.downloadStudentMonthlyReport = downloadStudentMonthlyReport;
 
         function logoutUser() {
             loggedInUser = null;
