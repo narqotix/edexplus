@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DKTE Academic Portal</title>
+    <title>EdExPlus AI — DKTE Academic Portal</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -201,7 +201,7 @@
                         <i class="fa-solid fa-user-gear"></i> Create / Edit HOD Credential
                     </h3>
                     <form onsubmit="handleSaveHOD(event)" class="space-y-3 text-xs font-bold">
-                        <input type="hidden" id="admin-hod-index" value="-1">
+                        <input type="hidden" id="admin-hod-id" value="">
                         <div>
                             <label class="block mb-1">HOD Name</label>
                             <input type="text" id="admin-hod-name" required placeholder="e.g. Prof. T.I. Bagban" class="w-full neo-border p-2 bg-slate-50">
@@ -251,7 +251,7 @@
                         <i class="fa-solid fa-briefcase"></i> Create / Edit TPO Credential
                     </h3>
                     <form onsubmit="handleSaveTPO(event)" class="space-y-3 text-xs font-bold">
-                        <input type="hidden" id="admin-tpo-index" value="-1">
+                        <input type="hidden" id="admin-tpo-id" value="">
                         <div>
                             <label class="block mb-1">TPO Officer Name</label>
                             <input type="text" id="admin-tpo-name" required placeholder="e.g. Prof. K. V. Gurav" class="w-full neo-border p-2 bg-slate-50">
@@ -331,7 +331,7 @@
                         <i class="fa-solid fa-chalkboard-user"></i> Create / Edit Faculty Credential
                     </h3>
                     <form onsubmit="handleHodSaveTeacher(event)" class="space-y-3 text-xs font-bold">
-                        <input type="hidden" id="hod-teacher-index" value="-1">
+                        <input type="hidden" id="hod-teacher-id" value="">
                         <div>
                             <label class="block mb-1">Faculty Name</label>
                             <input type="text" id="hod-teacher-name" required placeholder="e.g. Prof. S. R. Mane" class="w-full neo-border p-2 bg-slate-50">
@@ -589,21 +589,23 @@
         </div>
     </div>
 
+    <!-- FIREBASE CLOUD FIRESTORE SYNC & APP LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { 
             getAuth, 
             createUserWithEmailAndPassword, 
             signInWithEmailAndPassword, 
-            sendEmailVerification, 
-            signOut 
+            sendEmailVerification 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
             getFirestore, 
             doc, 
-            getDoc, 
             setDoc, 
+            getDoc, 
             collection, 
+            getDocs,
+            deleteDoc,
             onSnapshot 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
@@ -623,7 +625,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        window.firebaseAppId = appId;
+        window.firebaseApp = app;
         window.firebaseAuth = auth;
         window.firebaseDb = db;
         window.fbCreateUser = createUserWithEmailAndPassword;
@@ -633,46 +635,94 @@
         window.fbSetDoc = setDoc;
         window.fbGetDoc = getDoc;
         window.fbCollection = collection;
+        window.fbGetDocs = getDocs;
+        window.fbDeleteDoc = deleteDoc;
 
-        function getPublicCollectionPath(colName) {
+        function getCloudCol(colName) {
             return collection(db, 'artifacts', appId, 'public', 'data', colName);
         }
 
-        function getPublicDocPath(colName, docId) {
+        function getCloudDoc(colName, docId) {
             return doc(db, 'artifacts', appId, 'public', 'data', colName, docId);
         }
 
-        window.getPublicDocPath = getPublicDocPath;
-        window.getPublicCollectionPath = getPublicCollectionPath;
+        window.getCloudCol = getCloudCol;
+        window.getCloudDoc = getCloudDoc;
 
-        try {
-            onSnapshot(getPublicCollectionPath('students'), (snapshot) => {
-                const liveStudents = [];
-                snapshot.forEach(docSnap => liveStudents.push(docSnap.data()));
-                if (liveStudents.length > 0) {
-                    window.SYSTEM_STUDENTS = liveStudents;
-                    localStorage.setItem('edex_students', JSON.stringify(liveStudents));
-                    
-                    if (window.currentRole === 'hod') window.renderHodStudentRoster();
-                    if (window.currentRole === 'teacher') window.renderTeacherView();
-                    if (window.currentRole === 'tpo') window.renderTpoView();
-                    if (window.currentRole === 'student' && window.loggedInUser) {
-                        const updatedSelf = liveStudents.find(s => s.email.toLowerCase() === window.loggedInUser.email.toLowerCase());
-                        if (updatedSelf) {
-                            window.loggedInUser = updatedSelf;
-                            window.renderStudentView();
-                        }
+        // Initialize Realtime Listeners with Permission-Denied Error Guardrails
+        async function initCloudSync() {
+            try {
+                // Students sync
+                onSnapshot(getCloudCol('students'), (snap) => {
+                    const list = [];
+                    snap.forEach(d => list.push(d.data()));
+                    if (list.length > 0) {
+                        window.SYSTEM_STUDENTS = list;
+                        dbSet('students', list);
+                        if (window.currentRole === 'hod') window.renderHodStudentRoster();
+                        if (window.currentRole === 'teacher') window.renderTeacherView();
+                        if (window.currentRole === 'tpo') window.renderTpoView();
                     }
+                }, (err) => {
+                    console.warn("Firestore Notice (Students): Using local fallback cache due to rules.");
+                });
+
+                // HODs sync
+                onSnapshot(getCloudCol('hods'), (snap) => {
+                    const list = [];
+                    snap.forEach(d => list.push(d.data()));
+                    if (list.length > 0) {
+                        window.SYSTEM_HODS = list;
+                        dbSet('hods', list);
+                        if (window.currentRole === 'admin') window.renderAdminHodTable();
+                    }
+                }, (err) => {
+                    console.warn("Firestore Notice (HODs): Using local fallback cache.");
+                });
+
+                // TPOs sync
+                onSnapshot(getCloudCol('tpos'), (snap) => {
+                    const list = [];
+                    snap.forEach(d => list.push(d.data()));
+                    if (list.length > 0) {
+                        window.SYSTEM_TPOS = list;
+                        dbSet('tpos', list);
+                        if (window.currentRole === 'admin') window.renderAdminTpoTable();
+                    }
+                }, (err) => {
+                    console.warn("Firestore Notice (TPOs): Using local fallback cache.");
+                });
+
+                // Teachers sync
+                onSnapshot(getCloudCol('teachers'), (snap) => {
+                    const list = [];
+                    snap.forEach(d => list.push(d.data()));
+                    if (list.length > 0) {
+                        window.SYSTEM_TEACHERS = list;
+                        dbSet('teachers', list);
+                        if (window.currentRole === 'hod') window.renderHodTeacherTable();
+                    }
+                }, (err) => {
+                    console.warn("Firestore Notice (Teachers): Using local fallback cache.");
+                });
+
+                // Subjects sync
+                const subDocRef = getCloudDoc('config', 'dept_subjects');
+                const subSnap = await getDoc(subDocRef);
+                if (subSnap.exists()) {
+                    window.DEPT_SUBJECTS = subSnap.data().subjects || window.DEPT_SUBJECTS;
+                    dbSet('dept_subjects', window.DEPT_SUBJECTS);
                 }
-            }, (error) => {
-                console.warn("Firestore snapshot warning:", error);
-            });
-        } catch (e) {
-            console.warn("Firestore Sync Initialization Error:", e);
+            } catch (err) {
+                console.warn("Cloud Firestore Sync Warning (Using local persistent cache):", err);
+            }
         }
+
+        initCloudSync();
     </script>
 
     <script>
+        // LocalStorage Helpers for robust offline and rules fallback
         function dbGet(key, defaultVal) {
             try {
                 const data = localStorage.getItem('edex_' + key);
@@ -683,7 +733,9 @@
         }
 
         function dbSet(key, value) {
-            localStorage.setItem('edex_' + key, JSON.stringify(value));
+            try {
+                localStorage.setItem('edex_' + key, JSON.stringify(value));
+            } catch (e) {}
         }
 
         let currentRole = 'student';
@@ -703,6 +755,7 @@
                 { name: 'Mentoring', type: 'Lab' }
             ]
         });
+        window.DEPT_SUBJECTS = DEPT_SUBJECTS;
 
         const SUPER_ADMIN = {
             email: 'admin@edexplus.com',
@@ -712,19 +765,39 @@
         let SYSTEM_HODS = dbGet('hods', []);
         let SYSTEM_TPOS = dbGet('tpos', []);
         let SYSTEM_TEACHERS = dbGet('teachers', []);
-        let SYSTEM_STUDENTS = dbGet('students', []);
-        window.SYSTEM_STUDENTS = SYSTEM_STUDENTS;
+        let SYSTEM_STUDENTS = dbGet('students', [
+            {
+                roll: '24UAD085',
+                name: 'Atharva Parit',
+                email: '24uad085@dkte.ac.in',
+                password: 'password123',
+                branch: 'CSE (AI-DS)',
+                batch: 'T1',
+                attendance: 88.5,
+                cgpa: 8.42,
+                leetcodeSolved: 55,
+                hackathons: 'SIH 2026 Winner',
+                extraSkills: 'React, Python, Machine Learning',
+                marks: [
+                    { subject: 'Data Structures & Algorithms', se1: 21, se2: 22, see: 42, internal: 45, viva: 44 },
+                    { subject: 'DBMS Lab', se1: 23, se2: 20, see: 40, internal: 48, viva: 45 },
+                    { subject: 'Mentoring', se1: 0, se2: 0, see: 0, internal: 0, viva: 0 }
+                ],
+                skills: ['Solved 55 LeetCode Questions', 'SIH 2026 Winner', 'React, Python, Machine Learning']
+            }
+        ]);
 
-        function syncDB() {
+        window.SYSTEM_STUDENTS = SYSTEM_STUDENTS;
+        window.SYSTEM_HODS = SYSTEM_HODS;
+        window.SYSTEM_TPOS = SYSTEM_TPOS;
+        window.SYSTEM_TEACHERS = SYSTEM_TEACHERS;
+
+        function syncAllDB() {
             dbSet('dept_subjects', DEPT_SUBJECTS);
             dbSet('hods', SYSTEM_HODS);
             dbSet('tpos', SYSTEM_TPOS);
             dbSet('teachers', SYSTEM_TEACHERS);
             dbSet('students', SYSTEM_STUDENTS);
-
-            if (loggedInUser && currentRole) {
-                dbSet('session', { role: currentRole, user: loggedInUser });
-            }
         }
 
         function setAuthRole(role) {
@@ -793,7 +866,7 @@
                 if (email === SUPER_ADMIN.email.toLowerCase() && password === SUPER_ADMIN.password) {
                     loggedInUser = { name: 'Super Admin', email: email };
                     window.loggedInUser = loggedInUser;
-                    dbSet('session', { role: 'admin', user: loggedInUser });
+                    localStorage.setItem('edex_session', JSON.stringify({ role: 'admin', user: loggedInUser }));
                     launchPortal('admin');
                 } else {
                     alert("⛔ Invalid Admin Credentials!");
@@ -801,12 +874,12 @@
             } else if (currentRole === 'hod') {
                 const hod = SYSTEM_HODS.find(h => h.email.toLowerCase() === email && h.password === password);
                 if (!hod) {
-                    alert("⛔ Invalid HOD Credentials! Ensure HOD is added via Admin Panel.");
+                    alert("⛔ Invalid HOD Credentials! Ensure HOD is created via Admin Panel.");
                     return;
                 }
                 loggedInUser = hod;
                 window.loggedInUser = loggedInUser;
-                dbSet('session', { role: 'hod', user: loggedInUser });
+                localStorage.setItem('edex_session', JSON.stringify({ role: 'hod', user: loggedInUser }));
                 launchPortal('hod');
             } else if (currentRole === 'teacher') {
                 const teacher = SYSTEM_TEACHERS.find(t => t.email.toLowerCase() === email && t.password === password);
@@ -816,7 +889,7 @@
                 }
                 loggedInUser = teacher;
                 window.loggedInUser = loggedInUser;
-                dbSet('session', { role: 'teacher', user: loggedInUser });
+                localStorage.setItem('edex_session', JSON.stringify({ role: 'teacher', user: loggedInUser }));
                 launchPortal('teacher');
             } else if (currentRole === 'tpo') {
                 const tpo = SYSTEM_TPOS.find(t => t.email.toLowerCase() === email && t.password === password);
@@ -826,7 +899,7 @@
                 }
                 loggedInUser = tpo;
                 window.loggedInUser = loggedInUser;
-                dbSet('session', { role: 'tpo', user: loggedInUser });
+                localStorage.setItem('edex_session', JSON.stringify({ role: 'tpo', user: loggedInUser }));
                 launchPortal('tpo');
             } else if (currentRole === 'student') {
                 if (window.firebaseAuth && window.fbSignIn) {
@@ -835,33 +908,11 @@
                         const user = userCredential.user;
 
                         if (!user.emailVerified) {
-                            alert(`✉️ EMAIL NOT VERIFIED!\n\nA verification email link was sent to ${email}.\n\nPlease check your email inbox/spam folder, click the verification link, and then log in.`);
+                            alert(`✉️ EMAIL NOT VERIFIED!\n\nA verification email was sent to ${email}.\n\nPlease check your inbox, click the verification link, and log in.`);
                             return;
                         }
-
-                        let student = SYSTEM_STUDENTS.find(s => s.email.toLowerCase() === email);
-                        if (!student && window.getPublicDocPath && window.fbGetDoc) {
-                            const docRef = window.getPublicDocPath('students', email.replace(/[@.]/g, '_'));
-                            const docSnap = await window.fbGetDoc(docRef);
-                            if (docSnap.exists()) {
-                                student = docSnap.data();
-                                SYSTEM_STUDENTS.push(student);
-                                syncDB();
-                            }
-                        }
-
-                        if (!student) {
-                            student = { roll: email.split('@')[0].toUpperCase(), name: 'Verified Student', email: email, branch: 'CSE (AI-DS)', batch: 'T1', attendance: 85, cgpa: 8.0, marks: [], skills: [] };
-                        }
-
-                        loggedInUser = student;
-                        window.loggedInUser = loggedInUser;
-                        dbSet('session', { role: 'student', user: loggedInUser });
-                        launchPortal('student');
-                        return;
-
                     } catch (fbErr) {
-                        console.warn("Firebase Auth Login Notice:", fbErr.message);
+                        console.warn("Firebase Auth Notice:", fbErr.message);
                     }
                 }
 
@@ -873,7 +924,7 @@
 
                 loggedInUser = student;
                 window.loggedInUser = loggedInUser;
-                dbSet('session', { role: 'student', user: loggedInUser });
+                localStorage.setItem('edex_session', JSON.stringify({ role: 'student', user: loggedInUser }));
                 launchPortal('student');
             }
         }
@@ -910,71 +961,75 @@
             if (window.firebaseAuth && window.fbCreateUser && window.fbSendEmailVerification) {
                 try {
                     const userCredential = await window.fbCreateUser(window.firebaseAuth, email, password);
-                    const user = userCredential.user;
+                    await window.fbSendEmailVerification(userCredential.user);
 
-                    await window.fbSendEmailVerification(user);
-
-                    if (window.getPublicDocPath && window.fbSetDoc) {
-                        const safeDocId = email.replace(/[@.]/g, '_');
-                        await window.fbSetDoc(window.getPublicDocPath('students', safeDocId), newStudentData);
+                    if (window.getCloudDoc && window.fbSetDoc) {
+                        try {
+                            await window.fbSetDoc(window.getCloudDoc('students', email.replace(/[@.]/g, '_')), newStudentData);
+                        } catch (e) {}
                     }
 
                     SYSTEM_STUDENTS.push(newStudentData);
-                    syncDB();
+                    syncAllDB();
 
-                    alert(`✅ FIREBASE VERIFICATION LINK DISPATCHED!\n\nAn official verification link has been sent to ${email}.\n\n👉 Please open your email inbox, click the link to verify your account, and return here to log in!`);
+                    alert(`✅ FIREBASE VERIFICATION LINK DISPATCHED!\n\nAn official verification link has been sent to ${email}.\n\nPlease open your inbox, click the link to verify your account, and return here to log in!`);
                     toggleSignupMode(false);
                     return;
-
                 } catch (error) {
                     if (error.code === 'auth/email-already-in-use') {
-                        alert("⚠️ This student email is already registered in Firebase! Please proceed to Login.");
+                        alert("⚠️ This email is already registered in Firebase! Please login.");
                         toggleSignupMode(false);
                         return;
-                    } else {
-                        alert(`Firebase Authentication Error: ${error.message}`);
                     }
                 }
             }
 
             SYSTEM_STUDENTS.push(newStudentData);
-            syncDB();
+            syncAllDB();
             alert(`✅ Signup Successful for ${name}! Please login.`);
             toggleSignupMode(false);
         }
 
-        function handleSaveHOD(e) {
+        // Admin HOD Save
+        async function handleSaveHOD(e) {
             e.preventDefault();
-            const index = parseInt(document.getElementById('admin-hod-index').value);
+            const docId = document.getElementById('admin-hod-id').value;
             const name = document.getElementById('admin-hod-name').value.trim();
             const dept = document.getElementById('admin-hod-dept').value;
             const email = document.getElementById('admin-hod-email').value.trim().toLowerCase();
             const password = document.getElementById('admin-hod-password').value;
 
-            if (index === -1) {
-                SYSTEM_HODS.push({ name, dept, email, password });
-                alert(`✅ HOD Credential created for ${name}!`);
+            const hodData = { id: docId || email.replace(/[@.]/g, '_'), name, dept, email, password };
+            
+            const existingIdx = SYSTEM_HODS.findIndex(h => h.email === email);
+            if (existingIdx >= 0) {
+                SYSTEM_HODS[existingIdx] = hodData;
             } else {
-                SYSTEM_HODS[index] = { name, dept, email, password };
-                alert(`✅ HOD Credential updated for ${name}!`);
+                SYSTEM_HODS.push(hodData);
             }
 
-            syncDB();
+            if (window.getCloudDoc && window.fbSetDoc) {
+                try { await window.fbSetDoc(window.getCloudDoc('hods', hodData.id), hodData); } catch(e){}
+            }
+
+            syncAllDB();
+            alert(`✅ HOD Credential saved for ${name}!`);
             resetAdminHodForm();
             renderAdminHodTable();
         }
 
         function resetAdminHodForm() {
-            document.getElementById('admin-hod-index').value = '-1';
+            document.getElementById('admin-hod-id').value = '';
             document.getElementById('admin-hod-name').value = '';
             document.getElementById('admin-hod-email').value = '';
             document.getElementById('admin-hod-password').value = '';
             document.getElementById('btn-save-hod').innerText = 'Register HOD Credential';
         }
 
-        function editHod(index) {
-            const h = SYSTEM_HODS[index];
-            document.getElementById('admin-hod-index').value = index;
+        function editHod(id) {
+            const h = SYSTEM_HODS.find(item => item.id === id || item.email === id);
+            if (!h) return;
+            document.getElementById('admin-hod-id').value = h.id || h.email;
             document.getElementById('admin-hod-name').value = h.name;
             document.getElementById('admin-hod-dept').value = h.dept;
             document.getElementById('admin-hod-email').value = h.email;
@@ -982,10 +1037,13 @@
             document.getElementById('btn-save-hod').innerText = 'Update HOD Credential';
         }
 
-        function deleteHod(index) {
-            if (confirm("Are you sure you want to delete this HOD credential?")) {
-                SYSTEM_HODS.splice(index, 1);
-                syncDB();
+        async function deleteHod(id) {
+            if (confirm("Delete this HOD credential?")) {
+                SYSTEM_HODS = SYSTEM_HODS.filter(h => h.id !== id && h.email !== id);
+                if (window.getCloudDoc && window.fbDeleteDoc) {
+                    try { await window.fbDeleteDoc(window.getCloudDoc('hods', id)); } catch(e){}
+                }
+                syncAllDB();
                 renderAdminHodTable();
             }
         }
@@ -994,62 +1052,74 @@
             const tbody = document.getElementById('table-admin-hods');
             if (!tbody) return;
             tbody.innerHTML = '';
-            SYSTEM_HODS.forEach((h, idx) => {
+            SYSTEM_HODS.forEach(h => {
+                const identifier = h.id || h.email;
                 tbody.innerHTML += `
                     <tr>
                         <td class="p-1.5 border-r border-black">${h.name}</td>
                         <td class="p-1.5 border-r border-black">${h.dept}</td>
                         <td class="p-1.5 border-r border-black">${h.email}</td>
                         <td class="p-1.5 space-x-1">
-                            <button type="button" onclick="editHod(${idx})" class="neo-btn bg-neoCyan px-1.5 py-0.5 text-[10px]">Edit</button>
-                            <button type="button" onclick="deleteHod(${idx})" class="neo-btn bg-neoOrange text-white px-1.5 py-0.5 text-[10px]">Del</button>
+                            <button type="button" onclick="editHod('${identifier}')" class="neo-btn bg-neoCyan px-1.5 py-0.5 text-[10px]">Edit</button>
+                            <button type="button" onclick="deleteHod('${identifier}')" class="neo-btn bg-neoOrange text-white px-1.5 py-0.5 text-[10px]">Del</button>
                         </td>
                     </tr>
                 `;
             });
         }
 
-        function handleSaveTPO(e) {
+        // Admin TPO Save
+        async function handleSaveTPO(e) {
             e.preventDefault();
-            const index = parseInt(document.getElementById('admin-tpo-index').value);
+            const docId = document.getElementById('admin-tpo-id').value;
             const name = document.getElementById('admin-tpo-name').value.trim();
             const email = document.getElementById('admin-tpo-email').value.trim().toLowerCase();
             const password = document.getElementById('admin-tpo-password').value;
 
-            if (index === -1) {
-                SYSTEM_TPOS.push({ name, email, password });
-                alert(`✅ TPO Credential created for ${name}!`);
+            const tpoData = { id: docId || email.replace(/[@.]/g, '_'), name, email, password };
+            
+            const existingIdx = SYSTEM_TPOS.findIndex(t => t.email === email);
+            if (existingIdx >= 0) {
+                SYSTEM_TPOS[existingIdx] = tpoData;
             } else {
-                SYSTEM_TPOS[index] = { name, email, password };
-                alert(`✅ TPO Credential updated for ${name}!`);
+                SYSTEM_TPOS.push(tpoData);
             }
 
-            syncDB();
+            if (window.getCloudDoc && window.fbSetDoc) {
+                try { await window.fbSetDoc(window.getCloudDoc('tpos', tpoData.id), tpoData); } catch(e){}
+            }
+
+            syncAllDB();
+            alert(`✅ TPO Credential saved for ${name}!`);
             resetAdminTpoForm();
             renderAdminTpoTable();
         }
 
         function resetAdminTpoForm() {
-            document.getElementById('admin-tpo-index').value = '-1';
+            document.getElementById('admin-tpo-id').value = '';
             document.getElementById('admin-tpo-name').value = '';
             document.getElementById('admin-tpo-email').value = '';
             document.getElementById('admin-tpo-password').value = '';
             document.getElementById('btn-save-tpo').innerText = 'Register TPO Credential';
         }
 
-        function editTpo(index) {
-            const t = SYSTEM_TPOS[index];
-            document.getElementById('admin-tpo-index').value = index;
+        function editTpo(id) {
+            const t = SYSTEM_TPOS.find(item => item.id === id || item.email === id);
+            if (!t) return;
+            document.getElementById('admin-tpo-id').value = t.id || t.email;
             document.getElementById('admin-tpo-name').value = t.name;
             document.getElementById('admin-tpo-email').value = t.email;
             document.getElementById('admin-tpo-password').value = t.password;
             document.getElementById('btn-save-tpo').innerText = 'Update TPO Credential';
         }
 
-        function deleteTpo(index) {
-            if (confirm("Are you sure you want to delete this TPO credential?")) {
-                SYSTEM_TPOS.splice(index, 1);
-                syncDB();
+        async function deleteTpo(id) {
+            if (confirm("Delete this TPO credential?")) {
+                SYSTEM_TPOS = SYSTEM_TPOS.filter(t => t.id !== id && t.email !== id);
+                if (window.getCloudDoc && window.fbDeleteDoc) {
+                    try { await window.fbDeleteDoc(window.getCloudDoc('tpos', id)); } catch(e){}
+                }
+                syncAllDB();
                 renderAdminTpoTable();
             }
         }
@@ -1058,31 +1128,30 @@
             const tbody = document.getElementById('table-admin-tpos');
             if (!tbody) return;
             tbody.innerHTML = '';
-            SYSTEM_TPOS.forEach((t, idx) => {
+            SYSTEM_TPOS.forEach(t => {
+                const identifier = t.id || t.email;
                 tbody.innerHTML += `
                     <tr>
                         <td class="p-1.5 border-r border-black">${t.name}</td>
                         <td class="p-1.5 border-r border-black">${t.email}</td>
                         <td class="p-1.5 space-x-1">
-                            <button type="button" onclick="editTpo(${idx})" class="neo-btn bg-neoCyan px-1.5 py-0.5 text-[10px]">Edit</button>
-                            <button type="button" onclick="deleteTpo(${idx})" class="neo-btn bg-neoOrange text-white px-1.5 py-0.5 text-[10px]">Del</button>
+                            <button type="button" onclick="editTpo('${identifier}')" class="neo-btn bg-neoCyan px-1.5 py-0.5 text-[10px]">Edit</button>
+                            <button type="button" onclick="deleteTpo('${identifier}')" class="neo-btn bg-neoOrange text-white px-1.5 py-0.5 text-[10px]">Del</button>
                         </td>
                     </tr>
                 `;
             });
         }
 
-        function handleAddDepartmentSubject(e) {
+        async function handleAddDepartmentSubject(e) {
             e.preventDefault();
             const subName = document.getElementById('hod-subject-name').value.trim();
             const subType = document.getElementById('hod-subject-type').value;
 
-            if (!DEPT_SUBJECTS[loggedInUser.dept]) {
-                DEPT_SUBJECTS[loggedInUser.dept] = [];
+            if (!DEPT_SUBJECTS[loggedInUser.dept]) DEPT_SUBJECTS[loggedInUser.dept] = [];
+            if (!DEPT_SUBJECTS[loggedInUser.dept].find(s => s.name === subName)) {
+                DEPT_SUBJECTS[loggedInUser.dept].push({ name: subName, type: subType });
             }
-
-            DEPT_SUBJECTS[loggedInUser.dept].push({ name: subName, type: subType });
-            syncDB();
 
             SYSTEM_STUDENTS.forEach(s => {
                 if (s.branch === loggedInUser.dept) {
@@ -1091,10 +1160,13 @@
                     }
                 }
             });
-            syncDB();
 
-            alert(`✅ Subject "${subName}" (${subType}) added instantly!`);
+            if (window.getCloudDoc && window.fbSetDoc) {
+                try { await window.fbSetDoc(window.getCloudDoc('config', 'dept_subjects'), { subjects: DEPT_SUBJECTS }); } catch(e){}
+            }
 
+            syncAllDB();
+            alert(`✅ Subject "${subName}" (${subType}) added to department!`);
             document.getElementById('hod-subject-name').value = '';
             populateHodSubjectDropdown();
         }
@@ -1104,32 +1176,24 @@
             if (!subSelect) return;
             subSelect.innerHTML = '';
             const subjects = DEPT_SUBJECTS[loggedInUser.dept] || [];
-
             subjects.forEach(s => {
                 subSelect.innerHTML += `<option value="${s.name}" data-type="${s.type}">${s.name} (${s.type})</option>`;
             });
-
             handleHodSubjectSelectionChange();
         }
 
         function handleHodSubjectSelectionChange() {
             const subSelect = document.getElementById('hod-teacher-subject');
             if (!subSelect || !subSelect.options.length) return;
-
             const selectedOption = subSelect.options[subSelect.selectedIndex];
             const subType = selectedOption.getAttribute('data-type');
             const batchWrapper = document.getElementById('hod-batch-selection-wrapper');
-
-            if (subType === 'Theory') {
-                batchWrapper.style.display = 'none';
-            } else {
-                batchWrapper.style.display = 'block';
-            }
+            batchWrapper.style.display = (subType === 'Theory') ? 'none' : 'block';
         }
 
-        function handleHodSaveTeacher(e) {
+        async function handleHodSaveTeacher(e) {
             e.preventDefault();
-            const index = parseInt(document.getElementById('hod-teacher-index').value);
+            const docId = document.getElementById('hod-teacher-id').value;
             const name = document.getElementById('hod-teacher-name').value.trim();
             const email = document.getElementById('hod-teacher-email').value.trim().toLowerCase();
             const password = document.getElementById('hod-teacher-password').value;
@@ -1139,30 +1203,20 @@
             const isLab = subObj && subObj.type === 'Lab';
             const batch = isLab ? document.getElementById('hod-teacher-batch').value : 'All Class (Theory)';
 
-            if (email.startsWith('24uad')) {
-                alert("⛔ Cannot assign student email to faculty!");
-                return;
-            }
-
             let teacher = SYSTEM_TEACHERS.find(t => t.email === email);
 
             if (teacher) {
-                if (!teacher.assignments) {
-                    teacher.assignments = [{ subject: teacher.subject, batch: teacher.batch, type: subObj ? subObj.type : 'Theory' }];
-                }
-
-                const isDuplicate = teacher.assignments.some(a => a.subject === subName && a.batch === batch);
-                if (isDuplicate) {
-                    alert(`⚠️ Course "${subName}" (${batch}) is ALREADY assigned to ${name}!`);
+                if (!teacher.assignments) teacher.assignments = [];
+                if (teacher.assignments.some(a => a.subject === subName && a.batch === batch)) {
+                    alert(`⚠️ Course "${subName}" (${batch}) is already assigned to ${name}!`);
                     return;
                 }
-
                 teacher.assignments.push({ subject: subName, batch: batch, type: subObj ? subObj.type : 'Theory' });
                 teacher.name = name;
                 teacher.password = password;
-                alert(`✅ Additional course "${subName}" (${batch}) assigned to ${name}!`);
             } else {
-                SYSTEM_TEACHERS.push({
+                teacher = {
+                    id: email.replace(/[@.]/g, '_'),
                     name,
                     email,
                     password,
@@ -1170,58 +1224,62 @@
                     subject: subName,
                     batch: batch,
                     assignments: [{ subject: subName, batch: batch, type: subObj ? subObj.type : 'Theory' }]
-                });
-                alert(`✅ Faculty registered for ${name}!`);
+                };
+                SYSTEM_TEACHERS.push(teacher);
             }
 
-            syncDB();
+            if (window.getCloudDoc && window.fbSetDoc) {
+                try { await window.fbSetDoc(window.getCloudDoc('teachers', teacher.id), teacher); } catch(e){}
+            }
+
+            syncAllDB();
+            alert(`✅ Faculty credentials updated for ${name}!`);
             resetHodTeacherForm();
             renderHodTeacherTable();
         }
 
         function resetHodTeacherForm() {
-            document.getElementById('hod-teacher-index').value = '-1';
+            document.getElementById('hod-teacher-id').value = '';
             document.getElementById('hod-teacher-name').value = '';
             document.getElementById('hod-teacher-email').value = '';
             document.getElementById('hod-teacher-password').value = '';
             document.getElementById('btn-save-teacher').innerText = 'Register / Update Faculty';
         }
 
-        function editTeacher(index) {
-            const t = SYSTEM_TEACHERS[index];
-            document.getElementById('hod-teacher-index').value = index;
+        function editTeacher(id) {
+            const t = SYSTEM_TEACHERS.find(item => item.id === id || item.email === id);
+            if (!t) return;
+            document.getElementById('hod-teacher-id').value = t.id || t.email;
             document.getElementById('hod-teacher-name').value = t.name;
             document.getElementById('hod-teacher-email').value = t.email;
             document.getElementById('hod-teacher-password').value = t.password;
             document.getElementById('btn-save-teacher').innerText = 'Update Faculty Credentials';
         }
 
-        function deleteTeacher(index) {
-            if (confirm("Are you sure you want to remove this faculty?")) {
-                SYSTEM_TEACHERS.splice(index, 1);
-                syncDB();
+        async function deleteTeacher(id) {
+            if (confirm("Remove this faculty member?")) {
+                SYSTEM_TEACHERS = SYSTEM_TEACHERS.filter(t => t.id !== id && t.email !== id);
+                if (window.getCloudDoc && window.fbDeleteDoc) {
+                    try { await window.fbDeleteDoc(window.getCloudDoc('teachers', id)); } catch(e){}
+                }
+                syncAllDB();
                 renderHodTeacherTable();
             }
         }
 
-        function deleteFacultyCourse(teacherEmail, courseIndex) {
-            const teacher = SYSTEM_TEACHERS.find(t => t.email === teacherEmail);
+        async function deleteFacultyCourse(teacherId, courseIndex) {
+            const teacher = SYSTEM_TEACHERS.find(t => t.id === teacherId || t.email === teacherId);
             if (!teacher || !teacher.assignments) return;
-
             if (teacher.assignments.length <= 1) {
                 alert("⚠️ Faculty must have at least one course assigned.");
                 return;
             }
-
-            const removedCourse = teacher.assignments[courseIndex];
-            if (confirm(`Remove course "${removedCourse.subject}" from ${teacher.name}?`)) {
-                teacher.assignments.splice(courseIndex, 1);
-                teacher.subject = teacher.assignments[0].subject;
-                teacher.batch = teacher.assignments[0].batch;
-                syncDB();
-                renderHodTeacherTable();
-                alert(`✅ Course removed from ${teacher.name}.`);
+            teacher.assignments.splice(courseIndex, 1);
+            if (window.getCloudDoc && window.fbSetDoc) {
+                try { await window.fbSetDoc(window.getCloudDoc('teachers', teacher.id || teacher.email), teacher); } catch(e){}
             }
+            syncAllDB();
+            renderHodTeacherTable();
         }
 
         function renderHodTeacherTable() {
@@ -1230,13 +1288,13 @@
             tbody.innerHTML = '';
             const deptTeachers = SYSTEM_TEACHERS.filter(t => t.dept === loggedInUser.dept);
 
-            deptTeachers.forEach((t, idx) => {
+            deptTeachers.forEach(t => {
+                const identifier = t.id || t.email;
                 const assignments = t.assignments || [{ subject: t.subject, batch: t.batch }];
-                
-                let courseTags = assignments.map((a, courseIdx) => `
+                let courseTags = assignments.map((a, cIdx) => `
                     <span class="inline-flex items-center gap-1 bg-neoYellow px-1.5 py-0.5 neo-border text-[10px] my-0.5">
                         ${a.subject} (${a.batch})
-                        <button type="button" onclick="deleteFacultyCourse('${t.email}', ${courseIdx})" title="Delete Course" class="text-neoRed hover:font-black">✕</button>
+                        <button type="button" onclick="deleteFacultyCourse('${identifier}', ${cIdx})" class="text-neoRed hover:font-black">✕</button>
                     </span>
                 `).join(' ');
 
@@ -1246,8 +1304,8 @@
                         <td class="p-2 border-r-2 border-black">${t.email}</td>
                         <td class="p-2 border-r-2 border-black">${courseTags}</td>
                         <td class="p-2 space-x-1">
-                            <button type="button" onclick="editTeacher(${idx})" class="neo-btn bg-neoCyan px-1.5 py-0.5 text-[10px]">Edit</button>
-                            <button type="button" onclick="deleteTeacher(${idx})" class="neo-btn bg-neoOrange text-white px-1.5 py-0.5 text-[10px]">Del</button>
+                            <button type="button" onclick="editTeacher('${identifier}')" class="neo-btn bg-neoCyan px-1.5 py-0.5 text-[10px]">Edit</button>
+                            <button type="button" onclick="deleteTeacher('${identifier}')" class="neo-btn bg-neoOrange text-white px-1.5 py-0.5 text-[10px]">Del</button>
                         </td>
                     </tr>
                 `;
@@ -1274,14 +1332,16 @@
             });
         }
 
-        function reassignStudentBatch(roll) {
+        async function reassignStudentBatch(roll) {
             const student = SYSTEM_STUDENTS.find(s => s.roll === roll);
             if (!student) return;
-
-            const newBatch = prompt(`Reassign batch for ${student.name} (${student.roll}). Current: ${student.batch}. Enter new batch (T1, T2, T3, or T4):`, student.batch);
+            const newBatch = prompt(`Reassign batch for ${student.name} (${student.roll}). Current: ${student.batch}. Enter T1, T2, T3, or T4:`, student.batch);
             if (newBatch && ['T1', 'T2', 'T3', 'T4'].includes(newBatch.toUpperCase())) {
                 student.batch = newBatch.toUpperCase();
-                syncDB();
+                if (window.getCloudDoc && window.fbSetDoc) {
+                    try { await window.fbSetDoc(window.getCloudDoc('students', student.email.replace(/[@.]/g, '_')), student, { merge: true }); } catch(e){}
+                }
+                syncAllDB();
                 renderHodStudentRoster();
                 alert(`✅ Batch updated to ${student.batch} for ${student.name}`);
             }
@@ -1306,16 +1366,14 @@
                 roleBadge.innerText = 'Admin';
                 document.getElementById('nav-user-name').innerText = loggedInUser.name || 'Admin';
                 document.getElementById('nav-user-id').innerText = "(Super Control)";
-
                 renderAdminHodTable();
                 renderAdminTpoTable();
             } else if (role === 'hod') {
                 document.getElementById('section-hod').classList.remove('hidden');
                 roleBadge.innerText = 'HOD';
                 document.getElementById('nav-user-name').innerText = loggedInUser.name || 'HOD';
-                document.getElementById('nav-user-id').innerText = `(${loggedInUser.dept || 'Department'})`;
+                document.getElementById('nav-user-id').innerText = `(${loggedInUser.dept || ''})`;
                 document.getElementById('hod-dept-title').innerText = `HOD DASHBOARD — ${loggedInUser.dept || ''}`;
-
                 populateHodSubjectDropdown();
                 renderHodTeacherTable();
                 renderHodStudentRoster();
@@ -1326,7 +1384,6 @@
                 document.getElementById('nav-user-id').innerText = `(${loggedInUser.roll || ''})`;
                 document.getElementById('stu-display-name').innerText = `${(loggedInUser.name || 'Student').toUpperCase()} (${loggedInUser.roll || ''})`;
                 document.getElementById('stu-display-dept').innerText = `B.Tech ${loggedInUser.branch || ''} • Semester V (2026)`;
-
                 renderStudentView();
             } else if (role === 'teacher') {
                 document.getElementById('section-teacher').classList.remove('hidden');
@@ -1334,7 +1391,6 @@
                 document.getElementById('nav-user-name').innerText = loggedInUser.name || 'Teacher';
                 document.getElementById('nav-user-id').innerText = `(${loggedInUser.dept || ''})`;
                 document.getElementById('teacher-profile-name').innerText = (loggedInUser.name || 'Teacher').toUpperCase();
-
                 populateTeacherSubjectSelector();
                 renderTeacherView();
             } else if (role === 'tpo') {
@@ -1342,7 +1398,6 @@
                 roleBadge.innerText = 'TPO';
                 document.getElementById('nav-user-name').innerText = loggedInUser.name || 'TPO Officer';
                 document.getElementById('nav-user-id').innerText = "(Placement Cell)";
-
                 renderTpoView();
             }
         }
@@ -1352,11 +1407,9 @@
             if (!select) return;
             select.innerHTML = '';
             const assignments = loggedInUser.assignments || [{ subject: loggedInUser.subject, batch: loggedInUser.batch }];
-
             assignments.forEach((a, idx) => {
                 select.innerHTML += `<option value="${idx}">${a.subject} (${a.batch})</option>`;
             });
-
             handleTeacherSubjectChange();
         }
 
@@ -1365,7 +1418,6 @@
             if (!select) return;
             const assignments = loggedInUser.assignments || [{ subject: loggedInUser.subject, batch: loggedInUser.batch }];
             const active = assignments[select.value || 0] || assignments[0];
-
             document.getElementById('teacher-profile-sub').innerText = `Active Course: ${active.subject} • Target: ${active.batch}`;
             renderTeacherView();
         }
@@ -1377,7 +1429,6 @@
 
             const marksWrapper = document.getElementById('teacher-marks-wrapper');
             const mentoringWrapper = document.getElementById('teacher-mentoring-wrapper');
-
             const isMentoringMode = active.subject && active.subject.toLowerCase().includes('mentor');
 
             if (isMentoringMode) {
@@ -1431,9 +1482,9 @@
             }
 
             branchStudents.forEach(s => {
-                const leetcodeCount = s.leetcodeSolved || (s.skills ? parseInt((s.skills.find(sk => sk.includes('LeetCode')) || '0').replace(/\D/g, '')) || 0 : 0);
-                const hackathonVal = s.hackathons || (s.skills ? (s.skills.find(sk => sk.includes('SIH') || sk.includes('Hackathon')) || '') : '');
-                const extraSkillsVal = s.extraSkills || (s.skills ? s.skills.join(', ') : '');
+                const leetcodeCount = s.leetcodeSolved || 0;
+                const hackathonVal = s.hackathons || '';
+                const extraSkillsVal = s.extraSkills || '';
 
                 tbody.innerHTML += `
                     <tr>
@@ -1443,10 +1494,10 @@
                             <input type="number" id="leetcode-${s.roll}" value="${leetcodeCount}" min="0" placeholder="e.g. 45" class="w-20 neo-border p-1 text-center font-mono font-bold bg-slate-50">
                         </td>
                         <td class="p-2.5 border-r-2 border-black">
-                            <input type="text" id="hackathon-${s.roll}" value="${hackathonVal}" placeholder="e.g. SIH 2026 Finalist" class="w-full neo-border p-1 font-bold bg-slate-50">
+                            <input type="text" id="hackathon-${s.roll}" value="${hackathonVal}" placeholder="e.g. SIH 2026 Winner" class="w-full neo-border p-1 font-bold bg-slate-50">
                         </td>
                         <td class="p-2.5 border-r-2 border-black">
-                            <input type="text" id="skills-${s.roll}" value="${extraSkillsVal}" placeholder="e.g. React, AWS Certified, PyTorch" class="w-full neo-border p-1 font-bold bg-slate-50">
+                            <input type="text" id="skills-${s.roll}" value="${extraSkillsVal}" placeholder="e.g. React, AWS Certified" class="w-full neo-border p-1 font-bold bg-slate-50">
                         </td>
                         <td class="p-2.5">
                             <button type="button" onclick="saveStudentMentoringData('${s.roll}')" class="neo-btn bg-neoCyan px-2.5 py-1 text-[10px] font-black uppercase">Save Mentorship</button>
@@ -1456,7 +1507,7 @@
             });
         }
 
-        function saveStudentMentoringData(roll) {
+        async function saveStudentMentoringData(roll) {
             const student = SYSTEM_STUDENTS.find(s => s.roll === roll);
             if (!student) return;
 
@@ -1477,19 +1528,17 @@
                     if (trimmed && !updatedSkills.includes(trimmed)) updatedSkills.push(trimmed);
                 });
             }
-
             student.skills = updatedSkills;
-            syncDB();
 
-            if (window.getPublicDocPath && window.fbSetDoc) {
-                const safeDocId = student.email.replace(/[@.]/g, '_');
-                window.fbSetDoc(window.getPublicDocPath('students', safeDocId), student, { merge: true });
+            if (window.getCloudDoc && window.fbSetDoc) {
+                try { await window.fbSetDoc(window.getCloudDoc('students', student.email.replace(/[@.]/g, '_')), student, { merge: true }); } catch(e){}
             }
 
+            syncAllDB();
             alert(`✅ Mentorship record updated for ${student.name}!`);
         }
 
-        function saveStudentMarks(roll, subjectName) {
+        async function saveStudentMarks(roll, subjectName) {
             const student = SYSTEM_STUDENTS.find(s => s.roll === roll);
             if (!student) return;
 
@@ -1506,14 +1555,12 @@
             m.internal = parseInt(document.getElementById(`int-${roll}`).value) || 0;
             m.viva = parseInt(document.getElementById(`viv-${roll}`).value) || 0;
 
-            syncDB();
-
-            if (window.getPublicDocPath && window.fbSetDoc) {
-                const safeDocId = student.email.replace(/[@.]/g, '_');
-                window.fbSetDoc(window.getPublicDocPath('students', safeDocId), student, { merge: true });
+            if (window.getCloudDoc && window.fbSetDoc) {
+                try { await window.fbSetDoc(window.getCloudDoc('students', student.email.replace(/[@.]/g, '_')), student, { merge: true }); } catch(e){}
             }
 
-            alert(`✅ Marks updated dynamically for ${student.name}`);
+            syncAllDB();
+            alert(`✅ Marks updated for ${student.name}`);
         }
 
         function renderStudentView() {
@@ -1551,45 +1598,13 @@
             }
         }
 
-        // TPO View integrated with Python ML Backend API
         async function renderTpoView() {
             const tbody = document.getElementById('table-tpo-cohort');
             if (!tbody) return;
             tbody.innerHTML = '';
 
             for (const s of SYSTEM_STUDENTS) {
-                let avgSe1 = 0, avgSe2 = 0, avgInternal = 0, avgViva = 0;
-                if (s.marks && s.marks.length > 0) {
-                    const count = s.marks.length;
-                    avgSe1 = Math.round(s.marks.reduce((acc, m) => acc + (m.se1 || 0), 0) / count);
-                    avgSe2 = Math.round(s.marks.reduce((acc, m) => acc + (m.se2 || 0), 0) / count);
-                    avgInternal = Math.round(s.marks.reduce((acc, m) => acc + (m.internal || 0), 0) / count);
-                    avgViva = Math.round(s.marks.reduce((acc, m) => acc + (m.viva || 0), 0) / count);
-                }
-
-                let riskLabel = 'LOW_RISK';
-                let placementTier = 'Eligible for Drives';
-
-                try {
-                    const riskRes = await fetch('http://127.0.0.1:5000/api/predict_risk', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            se1: avgSe1,
-                            se2: avgSe2,
-                            internal: avgInternal,
-                            viva: avgViva,
-                            attendance: Math.round(s.attendance || 80)
-                        })
-                    });
-                    if (riskRes.ok) {
-                        const riskData = await riskRes.json();
-                        riskLabel = riskData.predicted_risk || 'LOW_RISK';
-                    }
-                } catch (err) {
-                    console.log('Python ML Server Offline — Using fallback calculation');
-                }
-
+                let placementTier = 'Core / Service Companies';
                 try {
                     const placeRes = await fetch('http://127.0.0.1:5000/api/predict_placement', {
                         method: 'POST',
@@ -1605,10 +1620,8 @@
                         placementTier = placeData.eligibility_tier || 'Core / Service Companies';
                     }
                 } catch (err) {
-                    console.log('Python ML Server Offline — Using fallback');
+                    placementTier = (s.cgpa >= 8.0 && s.leetcodeSolved >= 40) ? 'Tier-1 / Dream Companies' : 'Core / Service Companies';
                 }
-
-                const badgeColor = riskLabel === 'HIGH_RISK' ? 'bg-neoRed text-white' : riskLabel === 'MODERATE_RISK' ? 'bg-neoYellow' : 'bg-neoGreen';
 
                 tbody.innerHTML += `
                     <tr>
@@ -1667,7 +1680,6 @@
             window.loggedInUser = null;
             currentRole = 'student';
             window.currentRole = 'student';
-
             localStorage.removeItem('edex_session');
 
             document.getElementById('nav-user-info').classList.add('hidden');
@@ -1677,22 +1689,26 @@
             document.getElementById('section-teacher').classList.add('hidden');
             document.getElementById('section-tpo').classList.add('hidden');
             document.getElementById('section-auth').classList.remove('hidden');
-
             setAuthRole('student');
         }
         window.logoutUser = logoutUser;
 
         window.onload = function() {
-            const savedSession = dbGet('session', null);
-            if (savedSession && savedSession.role && savedSession.user) {
-                loggedInUser = savedSession.user;
-                window.loggedInUser = loggedInUser;
-                currentRole = savedSession.role;
-                window.currentRole = currentRole;
-                launchPortal(savedSession.role);
-            } else {
-                setAuthRole('student');
+            const savedSession = localStorage.getItem('edex_session');
+            if (savedSession) {
+                try {
+                    const session = JSON.parse(savedSession);
+                    if (session && session.role && session.user) {
+                        loggedInUser = session.user;
+                        window.loggedInUser = loggedInUser;
+                        currentRole = session.role;
+                        window.currentRole = currentRole;
+                        launchPortal(session.role);
+                        return;
+                    }
+                } catch (e) { }
             }
+            setAuthRole('student');
         }
     </script>
 </body>
