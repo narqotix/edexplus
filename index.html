@@ -6,7 +6,7 @@
     <title>EdExPlus AI — DKTE Academic, Placement & Admin Portal</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Space Grotesk & Lexend Mega saathi -->
+    <!-- Google Fonts: Space Grotesk & Lexend Mega -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lexend+Mega:wght@600;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
@@ -207,17 +207,19 @@
                 <div>
                     <span class="badge-tag bg-white px-2 py-0.5 text-xs font-bold uppercase">System Control Unit</span>
                     <h2 class="font-heading font-black text-2xl mt-1">SYSTEM ADMIN PANEL</h2>
-                    <p class="font-bold text-xs">Manage HOD Credentials & TPO Access</p>
+                    <p class="font-bold text-xs">Manage & Edit HOD Credentials & TPO Access</p>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Add HOD Credentials -->
+                <!-- Add / Edit HOD Credentials -->
                 <div class="bg-white neo-border-lg p-5 shadow-neo-lg space-y-4">
-                    <h3 class="font-heading font-black text-base uppercase border-b-2 border-black pb-2 text-neoOrange">
-                        <i class="fa-solid fa-user-gear"></i> Create HOD Credential
+                    <h3 class="font-heading font-black text-base uppercase border-b-2 border-black pb-2 text-neoOrange flex justify-between items-center" id="admin-hod-form-title">
+                        <span><i class="fa-solid fa-user-gear"></i> Create HOD Credential</span>
+                        <button id="btn-cancel-hod-edit" type="button" onclick="cancelHodEdit()" class="hidden text-xs bg-neoRed text-white px-2 py-0.5 neo-border">Cancel Edit</button>
                     </h3>
-                    <form onsubmit="handleAddHOD(event)" class="space-y-3 text-xs font-bold">
+                    <form onsubmit="handleSaveHOD(event)" class="space-y-3 text-xs font-bold">
+                        <input type="hidden" id="admin-hod-edit-index" value="-1">
                         <div>
                             <label class="block mb-1">HOD Name</label>
                             <input type="text" id="admin-hod-name" required placeholder="e.g. Prof. T.I. Bagban" class="w-full neo-border p-2 bg-slate-50">
@@ -230,33 +232,47 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block mb-1">HOD Email ID</label>
-                            <input type="email" id="admin-hod-email" required placeholder="hod.aids@dkte.ac.in" class="w-full neo-border p-2 bg-slate-50">
+                            <label class="block mb-1">HOD Email ID (Any Domain Allowed, e.g. gmail.com)</label>
+                            <input type="email" id="admin-hod-email" required placeholder="hod.aids@gmail.com" class="w-full neo-border p-2 bg-slate-50">
                         </div>
-                        <button type="submit" class="w-full neo-btn bg-neoGreen py-2 font-heading text-xs font-black uppercase">
+                        <button type="submit" id="btn-submit-hod" class="w-full neo-btn bg-neoGreen py-2 font-heading text-xs font-black uppercase">
                             Register HOD Credential
                         </button>
                     </form>
+
+                    <!-- Registered HODs List -->
+                    <div class="border-t-2 border-black pt-3">
+                        <p class="font-heading font-black text-xs uppercase mb-2">Registered HODs</p>
+                        <div id="admin-hod-list" class="space-y-2"></div>
+                    </div>
                 </div>
 
-                <!-- Add TPO Credentials -->
+                <!-- Add / Edit TPO Credentials -->
                 <div class="bg-white neo-border-lg p-5 shadow-neo-lg space-y-4">
-                    <h3 class="font-heading font-black text-base uppercase border-b-2 border-black pb-2 text-neoPurple">
-                        <i class="fa-solid fa-briefcase"></i> Create TPO Credential
+                    <h3 class="font-heading font-black text-base uppercase border-b-2 border-black pb-2 text-neoPurple flex justify-between items-center" id="admin-tpo-form-title">
+                        <span><i class="fa-solid fa-briefcase"></i> Create TPO Credential</span>
+                        <button id="btn-cancel-tpo-edit" type="button" onclick="cancelTpoEdit()" class="hidden text-xs bg-neoRed text-white px-2 py-0.5 neo-border">Cancel Edit</button>
                     </h3>
-                    <form onsubmit="handleAddTPO(event)" class="space-y-3 text-xs font-bold">
+                    <form onsubmit="handleSaveTPO(event)" class="space-y-3 text-xs font-bold">
+                        <input type="hidden" id="admin-tpo-edit-index" value="-1">
                         <div>
                             <label class="block mb-1">TPO Officer Name</label>
                             <input type="text" id="admin-tpo-name" required placeholder="e.g. Prof. K. V. Gurav" class="w-full neo-border p-2 bg-slate-50">
                         </div>
                         <div>
-                            <label class="block mb-1">TPO Email ID</label>
-                            <input type="email" id="admin-tpo-email" required placeholder="tpo@dkte.ac.in" class="w-full neo-border p-2 bg-slate-50">
+                            <label class="block mb-1">TPO Email ID (Any Domain Allowed, e.g. gmail.com)</label>
+                            <input type="email" id="admin-tpo-email" required placeholder="tpo.dkte@gmail.com" class="w-full neo-border p-2 bg-slate-50">
                         </div>
-                        <button type="submit" class="w-full neo-btn bg-neoCyan py-2 font-heading text-xs font-black uppercase">
+                        <button type="submit" id="btn-submit-tpo" class="w-full neo-btn bg-neoCyan py-2 font-heading text-xs font-black uppercase">
                             Register TPO Credential
                         </button>
                     </form>
+
+                    <!-- Registered TPOs List -->
+                    <div class="border-t-2 border-black pt-3">
+                        <p class="font-heading font-black text-xs uppercase mb-2">Registered TPO Officers</p>
+                        <div id="admin-tpo-list" class="space-y-2"></div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -269,25 +285,26 @@
                 <div>
                     <span class="badge-tag bg-white px-2.5 py-1 text-xs font-bold uppercase">Department Head Control</span>
                     <h2 class="font-heading font-black text-2xl mt-1" id="hod-dept-title">HOD DASHBOARD — CSE (AI-DS)</h2>
-                    <p class="font-bold text-xs">Assign Subjects, Create Faculty Credentials & Manage Student Batches (T1-T4)</p>
+                    <p class="font-bold text-xs">Assign Subjects, Create & Edit Faculty Credentials, Manage Student Batches (T1-T4)</p>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Create Teacher Credentials & Assign Subject/Batch -->
+                <!-- Create/Edit Teacher Credentials & Assign Subject/Batch -->
                 <div class="bg-white neo-border-lg p-5 shadow-neo-lg space-y-4">
-                    <h3 class="font-heading font-black text-base uppercase border-b-2 border-black pb-2 text-neoPink">
-                        <i class="fa-solid fa-chalkboard-user"></i> Create Faculty & Assign Role
+                    <h3 class="font-heading font-black text-base uppercase border-b-2 border-black pb-2 text-neoPink flex justify-between items-center" id="hod-teacher-form-title">
+                        <span><i class="fa-solid fa-chalkboard-user"></i> Create Faculty Credentials</span>
+                        <button id="btn-cancel-teacher-edit" type="button" onclick="cancelTeacherEdit()" class="hidden text-xs bg-neoRed text-white px-2 py-0.5 neo-border">Cancel Edit</button>
                     </h3>
-                    <form onsubmit="handleHodCreateTeacher(event)" class="space-y-3 text-xs font-bold">
+                    <form onsubmit="handleSaveTeacher(event)" class="space-y-3 text-xs font-bold">
+                        <input type="hidden" id="hod-teacher-edit-index" value="-1">
                         <div>
                             <label class="block mb-1">Faculty Name</label>
                             <input type="text" id="hod-teacher-name" required placeholder="e.g. Prof. S. R. Mane" class="w-full neo-border p-2 bg-slate-50">
                         </div>
                         <div>
-                            <label class="block mb-1">Faculty Official Email</label>
-                            <input type="email" id="hod-teacher-email" required placeholder="mane.sr@dkte.ac.in" class="w-full neo-border p-2 bg-slate-50">
-                            <span class="text-[10px] text-slate-500">Only authorized faculty emails allowed.</span>
+                            <label class="block mb-1">Faculty Email (Any Email Allowed, e.g. gmail.com)</label>
+                            <input type="email" id="hod-teacher-email" required placeholder="teacher.mane@gmail.com" class="w-full neo-border p-2 bg-slate-50">
                         </div>
                         <div>
                             <label class="block mb-1">Assigned Subject</label>
@@ -304,13 +321,19 @@
                                 <option value="T4">Batch T4 (Roll 61 - 80+)</option>
                             </select>
                         </div>
-                        <button type="submit" class="w-full neo-btn bg-neoYellow py-2.5 font-heading text-xs font-black uppercase">
-                            Create Teacher Credential & Assign
+                        <button type="submit" id="btn-submit-teacher" class="w-full neo-btn bg-neoYellow py-2.5 font-heading text-xs font-black uppercase">
+                            Register Faculty & Assign
                         </button>
                     </form>
+
+                    <!-- Department Faculty Roster -->
+                    <div class="border-t-2 border-black pt-3">
+                        <p class="font-heading font-black text-xs uppercase mb-2">Department Faculty List</p>
+                        <div id="hod-teacher-list" class="space-y-2"></div>
+                    </div>
                 </div>
 
-                <!-- Class Student Batch Division (80 students sitting in lecture, split into T1-T4) -->
+                <!-- Class Student Batch Division -->
                 <div class="lg:col-span-2 bg-white neo-border-lg p-5 shadow-neo-lg space-y-4">
                     <h3 class="font-heading font-black text-base uppercase border-b-2 border-black pb-2 flex items-center justify-between">
                         <span><i class="fa-solid fa-users-gear"></i> Department Student Roster & Batch Allocation</span>
@@ -556,21 +579,21 @@
             'CSE (AI-ML)': ['Deep Learning & Neural Nets', 'Computer Vision', 'Natural Language Processing', 'Reinforcement Learning']
         };
 
-        // Registered HOD & TPO credentials (Added via /admin)
+        // Registered HOD & TPO credentials (Added / Edited via /admin)
         const SYSTEM_HODS = [
-            { name: 'Prof. T.I. Bagban', email: 'hod.aids@dkte.ac.in', dept: 'CSE (AI-DS)' },
-            { name: 'Dr. V. A. Patil', email: 'hod.aiml@dkte.ac.in', dept: 'CSE (AI-ML)' }
+            { name: 'Prof. T.I. Bagban', email: 'hod.aids@gmail.com', dept: 'CSE (AI-DS)' },
+            { name: 'Dr. V. A. Patil', email: 'hod.aiml@gmail.com', dept: 'CSE (AI-ML)' }
         ];
 
         const SYSTEM_TPOS = [
-            { name: 'Prof. K. V. Gurav', email: 'tpo@dkte.ac.in' }
+            { name: 'Prof. K. V. Gurav', email: 'tpo.dkte@gmail.com' }
         ];
 
-        // Registered Faculty (Created by HODs)
+        // Registered Faculty (Created / Edited by HODs)
         const SYSTEM_TEACHERS = [
-            { name: 'Dr. Patil', email: 'dr.patil@dkte.ac.in', dept: 'CSE (AI-DS)', subject: 'Data Structures & Algorithms', batch: 'T1' },
-            { name: 'Prof. S. R. Mane', email: 'mane.sr@dkte.ac.in', dept: 'CSE (AI-DS)', subject: 'Database Management Systems', batch: 'T2' },
-            { name: 'Dr. A. B. Shinde', email: 'shinde.ab@dkte.ac.in', dept: 'CSE (AI-ML)', subject: 'Deep Learning & Neural Nets', batch: 'T1' }
+            { name: 'Dr. Patil', email: 'dr.patil@gmail.com', dept: 'CSE (AI-DS)', subject: 'Data Structures & Algorithms', batch: 'T1' },
+            { name: 'Prof. S. R. Mane', email: 'mane.sr@gmail.com', dept: 'CSE (AI-DS)', subject: 'Database Management Systems', batch: 'T2' },
+            { name: 'Dr. A. B. Shinde', email: 'shinde.ab@gmail.com', dept: 'CSE (AI-ML)', subject: 'Deep Learning & Neural Nets', batch: 'T1' }
         ];
 
         // Student Roster (AI-DS and AI-ML Students)
@@ -626,18 +649,18 @@
                 emailHint.classList.remove('hidden');
             } else if (role === 'teacher') {
                 document.getElementById('btn-tab-teacher').className = "neo-btn bg-neoPink py-2 text-[11px] font-black uppercase";
-                labelEmail.innerText = "Faculty Official Email ID";
-                emailInput.value = "dr.patil@dkte.ac.in";
+                labelEmail.innerText = "Faculty Email ID (Any Domain, e.g. gmail.com)";
+                emailInput.value = "dr.patil@gmail.com";
                 emailHint.classList.add('hidden');
             } else if (role === 'hod') {
                 document.getElementById('btn-tab-hod').className = "neo-btn bg-neoGreen py-2 text-[11px] font-black uppercase";
-                labelEmail.innerText = "HOD Email ID";
-                emailInput.value = "hod.aids@dkte.ac.in";
+                labelEmail.innerText = "HOD Email ID (Any Domain, e.g. gmail.com)";
+                emailInput.value = "hod.aids@gmail.com";
                 emailHint.classList.add('hidden');
             } else if (role === 'tpo') {
                 document.getElementById('btn-tab-tpo').className = "neo-btn bg-neoYellow py-2 text-[11px] font-black uppercase";
-                labelEmail.innerText = "TPO Officer Email ID";
-                emailInput.value = "tpo@dkte.ac.in";
+                labelEmail.innerText = "TPO Officer Email ID (Any Domain, e.g. gmail.com)";
+                emailInput.value = "tpo.dkte@gmail.com";
                 emailHint.classList.add('hidden');
             } else if (role === 'admin') {
                 document.getElementById('btn-tab-admin').className = "neo-btn bg-neoOrange py-2 text-[11px] font-black uppercase";
@@ -666,7 +689,7 @@
             e.preventDefault();
             const email = document.getElementById('auth-email').value.trim().toLowerCase();
 
-            // SECURITY CONTROL 1: Student Email Attempting Faculty/Admin Escalation
+            // SECURITY GUARDRAIL: Student Email Attempting Faculty/Admin Escalation
             if (email.startsWith('24uad') && currentRole !== 'student') {
                 alert("⛔ ACCESS DENIED! Student emails (24UADxxx@dkte.ac.in) are strictly restricted from Faculty/HOD/Admin panels.");
                 return;
@@ -691,7 +714,7 @@
             } else if (currentRole === 'hod') {
                 const hod = SYSTEM_HODS.find(h => h.email.toLowerCase() === email);
                 if (!hod) {
-                    alert("⛔ Invalid HOD Credentials!");
+                    alert("⛔ Invalid HOD Credentials! Ensure HOD credential is added via Admin Panel.");
                     return;
                 }
                 loggedInUser = hod;
@@ -699,7 +722,7 @@
             } else if (currentRole === 'tpo') {
                 const tpo = SYSTEM_TPOS.find(t => t.email.toLowerCase() === email);
                 if (!tpo) {
-                    alert("⛔ Invalid TPO Credentials!");
+                    alert("⛔ Invalid TPO Credentials! Ensure TPO credential is added via Admin Panel.");
                     return;
                 }
                 loggedInUser = tpo;
@@ -748,35 +771,148 @@
             toggleSignupMode(false);
         }
 
-        // Admin Panel Controls
-        function handleAddHOD(e) {
+        // ADMIN PANEL: Create or Edit HOD Credentials
+        function handleSaveHOD(e) {
             e.preventDefault();
-            const name = document.getElementById('admin-hod-name').value;
+            const index = parseInt(document.getElementById('admin-hod-edit-index').value);
+            const name = document.getElementById('admin-hod-name').value.trim();
             const dept = document.getElementById('admin-hod-dept').value;
-            const email = document.getElementById('admin-hod-email').value.toLowerCase();
+            const email = document.getElementById('admin-hod-email').value.trim().toLowerCase();
 
-            SYSTEM_HODS.push({ name: name, email: email, dept: dept });
-            alert(`✅ HOD Credential created for ${name} (${dept})!`);
+            if (index >= 0) {
+                // Update Existing HOD
+                SYSTEM_HODS[index] = { name, email, dept };
+                alert(`✅ HOD Credentials updated for ${name}!`);
+            } else {
+                // Create New HOD
+                SYSTEM_HODS.push({ name, email, dept });
+                alert(`✅ New HOD Registered: ${name} (${dept})`);
+            }
+
+            cancelHodEdit();
+            renderAdminHodList();
+        }
+
+        function editHod(index) {
+            const hod = SYSTEM_HODS[index];
+            document.getElementById('admin-hod-edit-index').value = index;
+            document.getElementById('admin-hod-name').value = hod.name;
+            document.getElementById('admin-hod-dept').value = hod.dept;
+            document.getElementById('admin-hod-email').value = hod.email;
+
+            document.getElementById('admin-hod-form-title').children[0].innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Edit HOD Credential`;
+            document.getElementById('btn-submit-hod').innerText = "Update HOD Credential";
+            document.getElementById('btn-cancel-hod-edit').classList.remove('hidden');
+        }
+
+        function cancelHodEdit() {
+            document.getElementById('admin-hod-edit-index').value = "-1";
             document.getElementById('admin-hod-name').value = '';
             document.getElementById('admin-hod-email').value = '';
+            document.getElementById('admin-hod-form-title').children[0].innerHTML = `<i class="fa-solid fa-user-gear"></i> Create HOD Credential`;
+            document.getElementById('btn-submit-hod').innerText = "Register HOD Credential";
+            document.getElementById('btn-cancel-hod-edit').classList.add('hidden');
         }
 
-        function handleAddTPO(e) {
-            e.preventDefault();
-            const name = document.getElementById('admin-tpo-name').value;
-            const email = document.getElementById('admin-tpo-email').value.toLowerCase();
+        function deleteHod(index) {
+            if (confirm(`Are you sure you want to delete HOD ${SYSTEM_HODS[index].name}?`)) {
+                SYSTEM_HODS.splice(index, 1);
+                renderAdminHodList();
+            }
+        }
 
-            SYSTEM_TPOS.push({ name: name, email: email });
-            alert(`✅ TPO Credential created for ${name}!`);
+        function renderAdminHodList() {
+            const container = document.getElementById('admin-hod-list');
+            if (!container) return;
+            container.innerHTML = '';
+            SYSTEM_HODS.forEach((h, idx) => {
+                container.innerHTML += `
+                    <div class="p-2 bg-neoYellow/20 neo-border flex items-center justify-between font-bold text-xs">
+                        <div>
+                            <span class="block font-black">${h.name} (${h.dept})</span>
+                            <span class="text-[10px] text-slate-600 font-mono">${h.email}</span>
+                        </div>
+                        <div class="flex gap-1">
+                            <button onclick="editHod(${idx})" class="neo-btn bg-neoCyan px-2 py-0.5 text-[10px] uppercase font-black">Edit</button>
+                            <button onclick="deleteHod(${idx})" class="neo-btn bg-neoRed text-white px-2 py-0.5 text-[10px] uppercase font-black">Del</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // ADMIN PANEL: Create or Edit TPO Credentials
+        function handleSaveTPO(e) {
+            e.preventDefault();
+            const index = parseInt(document.getElementById('admin-tpo-edit-index').value);
+            const name = document.getElementById('admin-tpo-name').value.trim();
+            const email = document.getElementById('admin-tpo-email').value.trim().toLowerCase();
+
+            if (index >= 0) {
+                SYSTEM_TPOS[index] = { name, email };
+                alert(`✅ TPO Credentials updated for ${name}!`);
+            } else {
+                SYSTEM_TPOS.push({ name, email });
+                alert(`✅ New TPO Officer Registered: ${name}`);
+            }
+
+            cancelTpoEdit();
+            renderAdminTpoList();
+        }
+
+        function editTpo(index) {
+            const tpo = SYSTEM_TPOS[index];
+            document.getElementById('admin-tpo-edit-index').value = index;
+            document.getElementById('admin-tpo-name').value = tpo.name;
+            document.getElementById('admin-tpo-email').value = tpo.email;
+
+            document.getElementById('admin-tpo-form-title').children[0].innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Edit TPO Credential`;
+            document.getElementById('btn-submit-tpo').innerText = "Update TPO Credential";
+            document.getElementById('btn-cancel-tpo-edit').classList.remove('hidden');
+        }
+
+        function cancelTpoEdit() {
+            document.getElementById('admin-tpo-edit-index').value = "-1";
             document.getElementById('admin-tpo-name').value = '';
             document.getElementById('admin-tpo-email').value = '';
+            document.getElementById('admin-tpo-form-title').children[0].innerHTML = `<i class="fa-solid fa-briefcase"></i> Create TPO Credential`;
+            document.getElementById('btn-submit-tpo').innerText = "Register TPO Credential";
+            document.getElementById('btn-cancel-tpo-edit').classList.add('hidden');
         }
 
-        // HOD Faculty Creation & Assignment Controls
-        function handleHodCreateTeacher(e) {
+        function deleteTpo(index) {
+            if (confirm(`Are you sure you want to delete TPO Officer ${SYSTEM_TPOS[index].name}?`)) {
+                SYSTEM_TPOS.splice(index, 1);
+                renderAdminTpoList();
+            }
+        }
+
+        function renderAdminTpoList() {
+            const container = document.getElementById('admin-tpo-list');
+            if (!container) return;
+            container.innerHTML = '';
+            SYSTEM_TPOS.forEach((t, idx) => {
+                container.innerHTML += `
+                    <div class="p-2 bg-neoCyan/20 neo-border flex items-center justify-between font-bold text-xs">
+                        <div>
+                            <span class="block font-black">${t.name}</span>
+                            <span class="text-[10px] text-slate-600 font-mono">${t.email}</span>
+                        </div>
+                        <div class="flex gap-1">
+                            <button onclick="editTpo(${idx})" class="neo-btn bg-neoYellow px-2 py-0.5 text-[10px] uppercase font-black">Edit</button>
+                            <button onclick="deleteTpo(${idx})" class="neo-btn bg-neoRed text-white px-2 py-0.5 text-[10px] uppercase font-black">Del</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // HOD PANEL: Create or Edit Faculty Credentials
+        function handleSaveTeacher(e) {
             e.preventDefault();
-            const name = document.getElementById('hod-teacher-name').value;
-            const email = document.getElementById('hod-teacher-email').value.toLowerCase();
+            const index = parseInt(document.getElementById('hod-teacher-edit-index').value);
+            const name = document.getElementById('hod-teacher-name').value.trim();
+            const email = document.getElementById('hod-teacher-email').value.trim().toLowerCase();
             const subject = document.getElementById('hod-teacher-subject').value;
             const batch = document.getElementById('hod-teacher-batch').value;
 
@@ -785,17 +921,69 @@
                 return;
             }
 
-            SYSTEM_TEACHERS.push({
-                name: name,
-                email: email,
-                dept: loggedInUser.dept,
-                subject: subject,
-                batch: batch
-            });
+            if (index >= 0) {
+                SYSTEM_TEACHERS[index] = { name, email, dept: loggedInUser.dept, subject, batch };
+                alert(`✅ Faculty credentials updated for ${name}!`);
+            } else {
+                SYSTEM_TEACHERS.push({ name, email, dept: loggedInUser.dept, subject, batch });
+                alert(`✅ Faculty Credential Created!\nName: ${name}\nAssigned Subject: ${subject}\nMentor for Batch: ${batch}`);
+            }
 
-            alert(`✅ Faculty Credential Created!\nName: ${name}\nAssigned Subject: ${subject}\nMentor for Batch: ${batch}`);
+            cancelTeacherEdit();
+            renderHodTeacherList();
+        }
+
+        function editTeacher(index) {
+            const teacher = SYSTEM_TEACHERS[index];
+            document.getElementById('hod-teacher-edit-index').value = index;
+            document.getElementById('hod-teacher-name').value = teacher.name;
+            document.getElementById('hod-teacher-email').value = teacher.email;
+            document.getElementById('hod-teacher-subject').value = teacher.subject;
+            document.getElementById('hod-teacher-batch').value = teacher.batch;
+
+            document.getElementById('hod-teacher-form-title').children[0].innerHTML = `<i class="fa-solid fa-user-pen"></i> Edit Faculty Credential`;
+            document.getElementById('btn-submit-teacher').innerText = "Update Faculty & Assign";
+            document.getElementById('btn-cancel-teacher-edit').classList.remove('hidden');
+        }
+
+        function cancelTeacherEdit() {
+            document.getElementById('hod-teacher-edit-index').value = "-1";
             document.getElementById('hod-teacher-name').value = '';
             document.getElementById('hod-teacher-email').value = '';
+            document.getElementById('hod-teacher-form-title').children[0].innerHTML = `<i class="fa-solid fa-chalkboard-user"></i> Create Faculty Credentials`;
+            document.getElementById('btn-submit-teacher').innerText = "Register Faculty & Assign";
+            document.getElementById('btn-cancel-teacher-edit').classList.add('hidden');
+        }
+
+        function deleteTeacher(index) {
+            if (confirm(`Are you sure you want to delete Faculty ${SYSTEM_TEACHERS[index].name}?`)) {
+                SYSTEM_TEACHERS.splice(index, 1);
+                renderHodTeacherList();
+            }
+        }
+
+        function renderHodTeacherList() {
+            const container = document.getElementById('hod-teacher-list');
+            if (!container || !loggedInUser) return;
+            container.innerHTML = '';
+            const deptTeachers = SYSTEM_TEACHERS.filter(t => t.dept === loggedInUser.dept);
+
+            deptTeachers.forEach((t) => {
+                const globalIndex = SYSTEM_TEACHERS.findIndex(gt => gt.email === t.email);
+                container.innerHTML += `
+                    <div class="p-2 bg-neoPink/20 neo-border flex items-center justify-between font-bold text-xs">
+                        <div>
+                            <span class="block font-black">${t.name}</span>
+                            <span class="text-[10px] text-slate-700 block">${t.subject} (Batch ${t.batch})</span>
+                            <span class="text-[10px] text-slate-600 font-mono">${t.email}</span>
+                        </div>
+                        <div class="flex gap-1">
+                            <button onclick="editTeacher(${globalIndex})" class="neo-btn bg-neoYellow px-2 py-0.5 text-[10px] uppercase font-black">Edit</button>
+                            <button onclick="deleteTeacher(${globalIndex})" class="neo-btn bg-neoRed text-white px-2 py-0.5 text-[10px] uppercase font-black">Del</button>
+                        </div>
+                    </div>
+                `;
+            });
         }
 
         // Launch Respective Dashboards
@@ -816,6 +1004,8 @@
                 roleBadge.innerText = 'Admin';
                 document.getElementById('nav-user-name').innerText = loggedInUser.name;
                 document.getElementById('nav-user-id').innerText = "(System Control)";
+                renderAdminHodList();
+                renderAdminTpoList();
             } else if (role === 'hod') {
                 document.getElementById('section-hod').classList.remove('hidden');
                 roleBadge.innerText = 'HOD';
@@ -831,6 +1021,7 @@
                 });
 
                 renderHodStudentRoster();
+                renderHodTeacherList();
             } else if (role === 'student') {
                 document.getElementById('section-student').classList.remove('hidden');
                 roleBadge.innerText = 'Student';
