@@ -62,7 +62,6 @@
 </head>
 <body class="font-sans antialiased selection:bg-neoPink selection:text-black custom-scrollbar min-h-screen flex flex-col">
 
-    <!-- Global Header -->
     <header class="bg-neoYellow neo-border-lg m-3 p-4 flex flex-wrap items-center justify-between gap-4 shadow-neo-lg z-30">
         <div class="flex items-center gap-3">
             <div class="h-12 w-12 bg-neoPink neo-border flex items-center justify-center font-heading font-black text-xl shadow-neo-sm">
@@ -88,7 +87,6 @@
         </div>
     </header>
 
-    <!-- Main Container -->
     <main class="flex-1 px-3 pb-8 max-w-7xl w-full mx-auto">
 
         <!-- ========================================== -->
@@ -454,6 +452,15 @@
                     </table>
                 </div>
             </div>
+
+            <!-- Mentorship & Skill Badges -->
+            <div class="bg-white neo-border-lg p-5 shadow-neo-lg space-y-3">
+                <h3 class="font-heading font-black text-base uppercase border-b-2 border-black pb-2 flex items-center justify-between">
+                    <span><i class="fa-solid fa-award text-neoOrange"></i> Verified Extracurriculars & Skills</span>
+                    <span class="text-[10px] bg-neoCyan px-2 py-0.5 neo-border">Batch Mentor Validated</span>
+                </h3>
+                <div id="student-skills-list" class="space-y-2"></div>
+            </div>
         </section>
 
         <!-- ========================================== -->
@@ -493,7 +500,7 @@
                 </div>
             </div>
 
-            <!-- MENTORSHIP & EXTRACURRICULAR DASHBOARD (SHOWN WHEN ACTIVE COURSE IS MENTORING) -->
+            <!-- MENTORSHIP & EXTRACURRICULAR DASHBOARD -->
             <div id="teacher-mentoring-wrapper" class="hidden bg-white neo-border-lg p-5 shadow-neo-lg space-y-4">
                 <div class="flex items-center justify-between border-b-4 border-black pb-3">
                     <div>
@@ -613,7 +620,7 @@
             onSnapshot 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Global Variables provided by environment with safe fallback
+        // Global Variables provided by environment with dynamic secret fallback
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'edexplus-ai';
         const userProvidedConfig = {
             apiKey: "AIzaSyBrDR19pOEa5Hcj9mkCNpnYlG0X88gkXzg",
@@ -1279,6 +1286,39 @@
             });
         }
 
+        function renderHodStudentRoster() {
+            const tbody = document.getElementById('table-hod-students');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            const deptStudents = SYSTEM_STUDENTS.filter(s => s.branch === loggedInUser.dept);
+
+            deptStudents.forEach(s => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="p-2 border-r-2 border-black font-black">${s.name} (${s.roll})</td>
+                        <td class="p-2 border-r-2 border-black">${s.branch}</td>
+                        <td class="p-2 border-r-2 border-black font-black text-neoOrange">${s.batch}</td>
+                        <td class="p-2">
+                            <button onclick="reassignStudentBatch('${s.roll}')" class="neo-btn bg-neoCyan px-2 py-0.5 text-[10px]">Reassign Batch</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function reassignStudentBatch(roll) {
+            const student = SYSTEM_STUDENTS.find(s => s.roll === roll);
+            if (!student) return;
+
+            const newBatch = prompt(`Reassign batch for ${student.name} (${student.roll}). Current: ${student.batch}. Enter new batch (T1, T2, T3, or T4):`, student.batch);
+            if (newBatch && ['T1', 'T2', 'T3', 'T4'].includes(newBatch.toUpperCase())) {
+                student.batch = newBatch.toUpperCase();
+                syncDB();
+                renderHodStudentRoster();
+                alert(`✅ Batch updated to ${student.batch} for ${student.name}`);
+            }
+        }
+
         function launchPortal(role) {
             currentRole = role;
             window.currentRole = role;
@@ -1481,7 +1521,15 @@
             alert(`✅ Mentorship record updated for ${student.name}!`);
         }
 
-        window.saveStudentMentoringData = saveStudentMentoringData;
+        function saveStudentMarks(roll, subjectName) {
+            const student = SYSTEM_STUDENTS.find(s => s.roll === roll);
+            if (!student) return;
+
+            let m = (student.marks || []).find(mk => mk.subject === subjectName);
+            if (!m) {
+                m = { subject: subjectName, se1: 0, se2: 0, see: 0, internal: 0, viva: 0 };
+                if (!student.marks) student.marks = [];
+                student.marks.push(m);
             }
 
             m.se1 = parseInt(document.getElementById(`se1-${roll}`).value) || 0;
@@ -1499,6 +1547,41 @@
             }
 
             alert(`✅ Marks updated dynamically for ${student.name}`);
+        }
+
+        function renderStudentView() {
+            const table = document.getElementById('table-student-marks');
+            if (!table) return;
+            table.innerHTML = '';
+
+            (loggedInUser.marks || []).forEach(m => {
+                const totalPct = Math.round(((m.se1 + m.se2 + m.see + m.internal + m.viva) / 200) * 100);
+                table.innerHTML += `
+                    <tr>
+                        <td class="p-3 border-r-2 border-black font-black">${m.subject}</td>
+                        <td class="p-3 border-r-2 border-black">${m.se1}</td>
+                        <td class="p-3 border-r-2 border-black">${m.se2}</td>
+                        <td class="p-3 border-r-2 border-black">${m.see}</td>
+                        <td class="p-3 border-r-2 border-black">${m.internal}</td>
+                        <td class="p-3 border-r-2 border-black">${m.viva}</td>
+                        <td class="p-3 border-r-2 border-black font-black text-blue-600">${totalPct}%</td>
+                        <td class="p-3"><span class="badge-tag bg-neoGreen px-2 py-0.5 text-[10px]">Passed</span></td>
+                    </tr>
+                `;
+            });
+
+            const skillsList = document.getElementById('student-skills-list');
+            if (skillsList) {
+                skillsList.innerHTML = '';
+                (loggedInUser.skills || []).forEach(s => {
+                    skillsList.innerHTML += `
+                        <div class="p-2 bg-neoYellow/20 neo-border text-xs font-bold flex justify-between items-center">
+                            <span><i class="fa-solid fa-check-circle text-neoGreen mr-1.5"></i> ${s}</span>
+                            <span class="badge-tag bg-white px-2 py-0.5 text-[10px]">Verified</span>
+                        </div>
+                    `;
+                });
+            }
         }
 
         function renderTpoView() {
@@ -1553,6 +1636,7 @@
         }
 
         // Attach global exports
+        window.saveStudentMentoringData = saveStudentMentoringData;
         window.renderHodStudentRoster = renderHodStudentRoster;
         window.renderTeacherView = renderTeacherView;
         window.renderTpoView = renderTpoView;
