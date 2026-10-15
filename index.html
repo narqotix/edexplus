@@ -472,7 +472,8 @@
                 </div>
             </div>
 
-            <div class="bg-white neo-border-lg p-5 shadow-neo-lg space-y-4">
+            <!-- ACADEMIC MARKS EVALUATION TABLE -->
+            <div id="teacher-marks-wrapper" class="bg-white neo-border-lg p-5 shadow-neo-lg space-y-4">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse neo-border font-bold text-xs">
                         <thead>
@@ -488,6 +489,35 @@
                             </tr>
                         </thead>
                         <tbody id="table-teacher-entry" class="divide-y-2 divide-black"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- MENTORSHIP & EXTRACURRICULAR DASHBOARD (SHOWN WHEN ACTIVE COURSE IS MENTORING) -->
+            <div id="teacher-mentoring-wrapper" class="hidden bg-white neo-border-lg p-5 shadow-neo-lg space-y-4">
+                <div class="flex items-center justify-between border-b-4 border-black pb-3">
+                    <div>
+                        <span class="badge-tag bg-neoCyan px-2.5 py-1 text-xs font-bold uppercase">Mentorship Record Manager</span>
+                        <h3 class="font-heading font-black text-lg uppercase mt-1">
+                            <i class="fa-solid fa-users-viewfinder text-neoOrange"></i> Student Mentorship, LeetCode & Hackathon Portal
+                        </h3>
+                    </div>
+                    <span class="badge-tag bg-neoYellow px-2.5 py-1 text-xs font-bold uppercase">Batch Mentee Tracking</span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse neo-border font-bold text-xs">
+                        <thead>
+                            <tr class="bg-neoYellow border-b-2 border-black uppercase">
+                                <th class="p-2.5 border-r-2 border-black">Roll & Name</th>
+                                <th class="p-2.5 border-r-2 border-black">Batch</th>
+                                <th class="p-2.5 border-r-2 border-black">LeetCode Solved (Qs)</th>
+                                <th class="p-2.5 border-r-2 border-black">Hackathon Wins / SIH Status</th>
+                                <th class="p-2.5 border-r-2 border-black">Extracurricular Skills & Badges</th>
+                                <th class="p-2.5">Mentor Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-teacher-mentoring-entry" class="divide-y-2 divide-black"></tbody>
                     </table>
                 </div>
             </div>
@@ -680,11 +710,13 @@
         let DEPT_SUBJECTS = dbGet('dept_subjects', {
             'CSE (AI-DS)': [
                 { name: 'Data Structures & Algorithms', type: 'Theory' },
-                { name: 'DBMS Lab', type: 'Lab' }
+                { name: 'DBMS Lab', type: 'Lab' },
+                { name: 'Mentoring', type: 'Lab' }
             ],
             'CSE (AI-ML)': [
                 { name: 'Deep Learning', type: 'Theory' },
-                { name: 'Computer Vision Lab', type: 'Lab' }
+                { name: 'Computer Vision Lab', type: 'Lab' },
+                { name: 'Mentoring', type: 'Lab' }
             ]
         });
 
@@ -1330,92 +1362,31 @@
             renderTeacherView();
         }
 
-        function logoutUser() {
-            localStorage.removeItem('edex_session');
-            if (window.firebaseAuth && window.firebaseAuth.currentUser) {
-                signOut(window.firebaseAuth).catch(() => {});
-            }
-            loggedInUser = null;
-            window.loggedInUser = null;
-            document.getElementById('section-auth').classList.remove('hidden');
-            document.getElementById('nav-user-info').classList.add('hidden');
-            document.getElementById('section-admin').classList.add('hidden');
-            document.getElementById('section-hod').classList.add('hidden');
-            document.getElementById('section-student').classList.add('hidden');
-            document.getElementById('section-teacher').classList.add('hidden');
-            document.getElementById('section-tpo').classList.add('hidden');
-            setAuthRole('student');
-        }
-
-        function renderHodStudentRoster() {
-            const tbody = document.getElementById('table-hod-students');
-            if (!tbody) return;
-            tbody.innerHTML = '';
-            const deptStudents = SYSTEM_STUDENTS.filter(s => s.branch === loggedInUser.dept);
-
-            deptStudents.forEach(s => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="p-2 border-r-2 border-black font-black">${s.name} (${s.roll})</td>
-                        <td class="p-2 border-r-2 border-black">${s.branch}</td>
-                        <td class="p-2 border-r-2 border-black font-black text-neoOrange">${s.batch}</td>
-                        <td class="p-2">
-                            <button onclick="reassignStudentBatch('${s.roll}')" class="neo-btn bg-neoCyan px-2 py-0.5 text-[10px]">Reassign Batch</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        function reassignStudentBatch(roll) {
-            const student = SYSTEM_STUDENTS.find(s => s.roll === roll);
-            if (!student) return;
-
-            const newBatch = prompt(`Reassign batch for ${student.name} (${student.roll}). Current: ${student.batch}. Enter new batch (T1, T2, T3, or T4):`, student.batch);
-            if (newBatch && ['T1', 'T2', 'T3', 'T4'].includes(newBatch.toUpperCase())) {
-                student.batch = newBatch.toUpperCase();
-                syncDB();
-
-                if (window.getPublicDocPath && window.fbSetDoc) {
-                    const safeDocId = student.email.replace(/[@.]/g, '_');
-                    window.fbSetDoc(window.getPublicDocPath('students', safeDocId), student, { merge: true });
-                }
-
-                renderHodStudentRoster();
-                alert(`✅ Batch updated to ${student.batch} for ${student.name}`);
-            }
-        }
-
-        function renderStudentView() {
-            const table = document.getElementById('table-student-marks');
-            if (!table) return;
-            table.innerHTML = '';
-
-            (loggedInUser.marks || []).forEach(m => {
-                const totalPct = Math.round(((m.se1 + m.se2 + m.see + m.internal + m.viva) / 200) * 100);
-                table.innerHTML += `
-                    <tr>
-                        <td class="p-3 border-r-2 border-black font-black">${m.subject}</td>
-                        <td class="p-3 border-r-2 border-black">${m.se1}</td>
-                        <td class="p-3 border-r-2 border-black">${m.se2}</td>
-                        <td class="p-3 border-r-2 border-black">${m.see}</td>
-                        <td class="p-3 border-r-2 border-black">${m.internal}</td>
-                        <td class="p-3 border-r-2 border-black">${m.viva}</td>
-                        <td class="p-3 border-r-2 border-black font-black text-blue-600">${totalPct}%</td>
-                        <td class="p-3"><span class="badge-tag bg-neoGreen px-2 py-0.5 text-[10px]">Passed</span></td>
-                    </tr>
-                `;
-            });
-        }
-
         function renderTeacherView() {
-            const tbody = document.getElementById('table-teacher-entry');
-            if (!tbody) return;
-            tbody.innerHTML = '';
-
             const select = document.getElementById('teacher-active-subject-select');
             const assignments = loggedInUser.assignments || [{ subject: loggedInUser.subject, batch: loggedInUser.batch }];
             const active = assignments[select ? (select.value || 0) : 0] || assignments[0];
+
+            const marksWrapper = document.getElementById('teacher-marks-wrapper');
+            const mentoringWrapper = document.getElementById('teacher-mentoring-wrapper');
+
+            const isMentoringMode = active.subject && active.subject.toLowerCase().includes('mentor');
+
+            if (isMentoringMode) {
+                if (marksWrapper) marksWrapper.classList.add('hidden');
+                if (mentoringWrapper) mentoringWrapper.classList.remove('hidden');
+                renderTeacherMentoringView(active);
+            } else {
+                if (mentoringWrapper) mentoringWrapper.classList.add('hidden');
+                if (marksWrapper) marksWrapper.classList.remove('hidden');
+                renderTeacherMarksView(active);
+            }
+        }
+
+        function renderTeacherMarksView(active) {
+            const tbody = document.getElementById('table-teacher-entry');
+            if (!tbody) return;
+            tbody.innerHTML = '';
 
             let branchStudents = SYSTEM_STUDENTS.filter(s => s.branch === loggedInUser.dept);
             if (active.batch !== 'All Class (Theory)') {
@@ -1434,22 +1405,83 @@
                         <td class="p-2.5 border-r-2 border-black"><input type="number" id="int-${s.roll}" value="${m.internal}" max="50" class="w-12 neo-border p-1 text-center font-bold"></td>
                         <td class="p-2.5 border-r-2 border-black"><input type="number" id="viv-${s.roll}" value="${m.viva}" max="50" class="w-12 neo-border p-1 text-center font-bold"></td>
                         <td class="p-2.5">
-                            <button onclick="saveStudentMarks('${s.roll}', '${active.subject}')" class="neo-btn bg-neoYellow px-2 py-1 text-[10px] font-black uppercase">Save</button>
+                            <button onclick="saveStudentMarks('${s.roll}', '${active.subject}')" class="neo-btn bg-neoYellow px-2 py-1 text-[10px] font-black uppercase">Save Marks</button>
                         </td>
                     </tr>
                 `;
             });
         }
 
-        function saveStudentMarks(roll, subjectName) {
+        function renderTeacherMentoringView(active) {
+            const tbody = document.getElementById('table-teacher-mentoring-entry');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            let branchStudents = SYSTEM_STUDENTS.filter(s => s.branch === loggedInUser.dept);
+            if (active.batch !== 'All Class (Theory)') {
+                branchStudents = branchStudents.filter(s => s.batch === active.batch);
+            }
+
+            branchStudents.forEach(s => {
+                const leetcodeCount = s.leetcodeSolved || (s.skills ? parseInt((s.skills.find(sk => sk.includes('LeetCode')) || '0').replace(/\D/g, '')) || 0 : 0);
+                const hackathonVal = s.hackathons || (s.skills ? (s.skills.find(sk => sk.includes('SIH') || sk.includes('Hackathon')) || '') : '');
+                const extraSkillsVal = s.extraSkills || (s.skills ? s.skills.join(', ') : '');
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="p-2.5 border-r-2 border-black font-black">${s.name} (${s.roll})</td>
+                        <td class="p-2.5 border-r-2 border-black font-black">${s.batch}</td>
+                        <td class="p-2.5 border-r-2 border-black">
+                            <input type="number" id="leetcode-${s.roll}" value="${leetcodeCount}" min="0" placeholder="e.g. 45" class="w-20 neo-border p-1 text-center font-mono font-bold bg-slate-50">
+                        </td>
+                        <td class="p-2.5 border-r-2 border-black">
+                            <input type="text" id="hackathon-${s.roll}" value="${hackathonVal}" placeholder="e.g. SIH 2026 Finalist" class="w-full neo-border p-1 font-bold bg-slate-50">
+                        </td>
+                        <td class="p-2.5 border-r-2 border-black">
+                            <input type="text" id="skills-${s.roll}" value="${extraSkillsVal}" placeholder="e.g. React, AWS Certified, PyTorch" class="w-full neo-border p-1 font-bold bg-slate-50">
+                        </td>
+                        <td class="p-2.5">
+                            <button onclick="saveStudentMentoringData('${s.roll}')" class="neo-btn bg-neoCyan px-2.5 py-1 text-[10px] font-black uppercase">Save Mentorship</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function saveStudentMentoringData(roll) {
             const student = SYSTEM_STUDENTS.find(s => s.roll === roll);
             if (!student) return;
 
-            if (!student.marks) student.marks = [];
-            let m = student.marks.find(mk => mk.subject === subjectName);
-            if (!m) {
-                m = { subject: subjectName, se1: 0, se2: 0, see: 0, internal: 0, viva: 0 };
-                student.marks.push(m);
+            const leetcode = parseInt(document.getElementById(`leetcode-${roll}`).value) || 0;
+            const hackathon = document.getElementById(`hackathon-${roll}`).value.trim();
+            const skillsText = document.getElementById(`skills-${roll}`).value.trim();
+
+            student.leetcodeSolved = leetcode;
+            student.hackathons = hackathon;
+            student.extraSkills = skillsText;
+
+            const updatedSkills = [];
+            if (leetcode > 0) updatedSkills.push(`Solved ${leetcode} LeetCode Questions`);
+            if (hackathon) updatedSkills.push(hackathon);
+            if (skillsText) {
+                skillsText.split(',').forEach(sk => {
+                    const trimmed = sk.trim();
+                    if (trimmed && !updatedSkills.includes(trimmed)) updatedSkills.push(trimmed);
+                });
+            }
+
+            student.skills = updatedSkills;
+            syncDB();
+
+            if (window.getPublicDocPath && window.fbSetDoc) {
+                const safeDocId = student.email.replace(/[@.]/g, '_');
+                window.fbSetDoc(window.getPublicDocPath('students', safeDocId), student, { merge: true });
+            }
+
+            alert(`✅ Mentorship record updated for ${student.name}!`);
+        }
+
+        window.saveStudentMentoringData = saveStudentMentoringData;
             }
 
             m.se1 = parseInt(document.getElementById(`se1-${roll}`).value) || 0;
