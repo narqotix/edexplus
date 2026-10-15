@@ -79,8 +79,8 @@
         <div id="nav-user-info" class="hidden flex items-center gap-3">
             <div class="bg-white px-3 py-1.5 neo-border font-bold text-xs">
                 <span id="nav-user-role" class="bg-neoCyan px-2 py-0.5 neo-border mr-2 uppercase">Student</span>
-                <span id="nav-user-name">Atharva Parit</span> 
-                <span id="nav-user-id" class="text-xs text-slate-600 ml-1 font-mono">(24UAD002)</span>
+                <span id="nav-user-name">User</span> 
+                <span id="nav-user-id" class="text-xs text-slate-600 ml-1 font-mono"></span>
             </div>
             <button onclick="logoutUser()" class="neo-btn bg-neoOrange px-3 py-1.5 font-bold text-xs uppercase flex items-center gap-1">
                 <i class="fa-solid fa-right-from-bracket"></i> Logout
@@ -126,7 +126,7 @@
                 <form id="form-login" onsubmit="handleAuthLogin(event)" class="space-y-4">
                     <div>
                         <label class="block font-bold text-xs uppercase mb-1" id="label-email">Email ID</label>
-                        <input type="email" id="auth-email" required placeholder="e.g. 24uad002@dkte.ac.in" 
+                        <input type="email" id="auth-email" required placeholder="Enter Email Address" 
                             class="w-full bg-slate-50 neo-border p-3 font-bold text-sm focus:outline-none focus:bg-neoYellow/20">
                         <p id="auth-email-hint" class="text-[11px] font-bold text-neoOrange mt-1">
                             ⚠️ Student format: 24UADxxx@dkte.ac.in
@@ -135,20 +135,8 @@
 
                     <div>
                         <label class="block font-bold text-xs uppercase mb-1">Password</label>
-                        <input type="password" id="auth-password" required value="dkte1234"
+                        <input type="password" id="auth-password" required placeholder="Enter Password"
                             class="w-full bg-slate-50 neo-border p-3 font-bold text-sm focus:outline-none focus:bg-neoYellow/20">
-                    </div>
-
-                    <div id="otp-verification-box" class="hidden p-3 bg-neoYellow/30 neo-border space-y-2">
-                        <span class="badge-tag bg-neoPink px-2 py-0.5 text-[10px] font-bold uppercase">Email Verification OTP Sent</span>
-                        <p class="text-xs font-bold">Check inbox for <span id="target-verification-email" class="underline">24uad002@dkte.ac.in</span></p>
-                        <div class="flex gap-2">
-                            <input type="text" id="auth-otp" placeholder="Enter OTP (123456)" 
-                                class="flex-1 neo-border p-2 font-mono font-bold text-center text-sm bg-white">
-                            <button type="button" onclick="verifyOtpCode()" class="neo-btn bg-neoGreen px-4 text-xs font-bold uppercase">
-                                Verify OTP
-                            </button>
-                        </div>
                     </div>
 
                     <button type="submit" class="w-full neo-btn bg-neoGreen py-3.5 font-heading text-sm font-black uppercase tracking-wider">
@@ -185,7 +173,7 @@
                     </div>
                     <div>
                         <label class="block font-bold text-xs uppercase mb-1">Password</label>
-                        <input type="password" id="signup-password" required value="dkte1234" class="w-full bg-slate-50 neo-border p-2.5 font-bold text-sm">
+                        <input type="password" id="signup-password" required placeholder="Create Password" class="w-full bg-slate-50 neo-border p-2.5 font-bold text-sm">
                     </div>
                     <button type="submit" class="w-full neo-btn bg-neoCyan py-3 font-heading text-xs font-black uppercase">
                         Complete Student Signup
@@ -232,8 +220,12 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block mb-1">HOD Email ID (Any Domain Allowed, e.g. gmail.com)</label>
-                            <input type="email" id="admin-hod-email" required placeholder="hod.aids@gmail.com" class="w-full neo-border p-2 bg-slate-50">
+                            <label class="block mb-1">HOD Email ID (Any Domain)</label>
+                            <input type="email" id="admin-hod-email" required placeholder="e.g. hod.aids@gmail.com" class="w-full neo-border p-2 bg-slate-50">
+                        </div>
+                        <div>
+                            <label class="block mb-1">Password</label>
+                            <input type="password" id="admin-hod-password" required placeholder="Set Password" class="w-full neo-border p-2 bg-slate-50">
                         </div>
                         <button type="submit" id="btn-submit-hod" class="w-full neo-btn bg-neoGreen py-2 font-heading text-xs font-black uppercase">
                             Register HOD Credential
@@ -243,7 +235,9 @@
                     <!-- Registered HODs List -->
                     <div class="border-t-2 border-black pt-3">
                         <p class="font-heading font-black text-xs uppercase mb-2">Registered HODs</p>
-                        <div id="admin-hod-list" class="space-y-2"></div>
+                        <div id="admin-hod-list" class="space-y-2">
+                            <p class="text-xs text-slate-500 italic">No HODs registered yet.</p>
+                        </div>
                     </div>
                 </div>
 
@@ -260,8 +254,12 @@
                             <input type="text" id="admin-tpo-name" required placeholder="e.g. Prof. K. V. Gurav" class="w-full neo-border p-2 bg-slate-50">
                         </div>
                         <div>
-                            <label class="block mb-1">TPO Email ID (Any Domain Allowed, e.g. gmail.com)</label>
-                            <input type="email" id="admin-tpo-email" required placeholder="tpo.dkte@gmail.com" class="w-full neo-border p-2 bg-slate-50">
+                            <label class="block mb-1">TPO Email ID (Any Domain)</label>
+                            <input type="email" id="admin-tpo-email" required placeholder="e.g. tpo.dkte@gmail.com" class="w-full neo-border p-2 bg-slate-50">
+                        </div>
+                        <div>
+                            <label class="block mb-1">Password</label>
+                            <input type="password" id="admin-tpo-password" required placeholder="Set Password" class="w-full neo-border p-2 bg-slate-50">
                         </div>
                         <button type="submit" id="btn-submit-tpo" class="w-full neo-btn bg-neoCyan py-2 font-heading text-xs font-black uppercase">
                             Register TPO Credential
@@ -271,7 +269,9 @@
                     <!-- Registered TPOs List -->
                     <div class="border-t-2 border-black pt-3">
                         <p class="font-heading font-black text-xs uppercase mb-2">Registered TPO Officers</p>
-                        <div id="admin-tpo-list" class="space-y-2"></div>
+                        <div id="admin-tpo-list" class="space-y-2">
+                            <p class="text-xs text-slate-500 italic">No TPO officers registered yet.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -284,7 +284,7 @@
             <div class="bg-neoGreen neo-border-lg p-5 shadow-neo-lg flex items-center justify-between">
                 <div>
                     <span class="badge-tag bg-white px-2.5 py-1 text-xs font-bold uppercase">Department Head Control</span>
-                    <h2 class="font-heading font-black text-2xl mt-1" id="hod-dept-title">HOD DASHBOARD — CSE (AI-DS)</h2>
+                    <h2 class="font-heading font-black text-2xl mt-1" id="hod-dept-title">HOD DASHBOARD</h2>
                     <p class="font-bold text-xs">Assign Subjects, Create & Edit Faculty Credentials, Manage Student Batches (T1-T4)</p>
                 </div>
             </div>
@@ -303,8 +303,12 @@
                             <input type="text" id="hod-teacher-name" required placeholder="e.g. Prof. S. R. Mane" class="w-full neo-border p-2 bg-slate-50">
                         </div>
                         <div>
-                            <label class="block mb-1">Faculty Email (Any Email Allowed, e.g. gmail.com)</label>
-                            <input type="email" id="hod-teacher-email" required placeholder="teacher.mane@gmail.com" class="w-full neo-border p-2 bg-slate-50">
+                            <label class="block mb-1">Faculty Email (Any Domain)</label>
+                            <input type="email" id="hod-teacher-email" required placeholder="e.g. teacher.mane@gmail.com" class="w-full neo-border p-2 bg-slate-50">
+                        </div>
+                        <div>
+                            <label class="block mb-1">Password</label>
+                            <input type="password" id="hod-teacher-password" required placeholder="Set Password" class="w-full neo-border p-2 bg-slate-50">
                         </div>
                         <div>
                             <label class="block mb-1">Assigned Subject</label>
@@ -329,7 +333,9 @@
                     <!-- Department Faculty Roster -->
                     <div class="border-t-2 border-black pt-3">
                         <p class="font-heading font-black text-xs uppercase mb-2">Department Faculty List</p>
-                        <div id="hod-teacher-list" class="space-y-2"></div>
+                        <div id="hod-teacher-list" class="space-y-2">
+                            <p class="text-xs text-slate-500 italic">No faculty added yet.</p>
+                        </div>
                     </div>
                 </div>
 
@@ -337,7 +343,7 @@
                 <div class="lg:col-span-2 bg-white neo-border-lg p-5 shadow-neo-lg space-y-4">
                     <h3 class="font-heading font-black text-base uppercase border-b-2 border-black pb-2 flex items-center justify-between">
                         <span><i class="fa-solid fa-users-gear"></i> Department Student Roster & Batch Allocation</span>
-                        <span class="badge-tag bg-neoCyan px-2 py-0.5 text-[10px]">Total: 80 Students</span>
+                        <span id="hod-student-count-badge" class="badge-tag bg-neoCyan px-2 py-0.5 text-[10px]">Total: 0 Students</span>
                     </h3>
 
                     <div class="overflow-x-auto">
@@ -352,7 +358,9 @@
                                 </tr>
                             </thead>
                             <tbody id="table-hod-students" class="divide-y-2 divide-black">
-                                <!-- Dynamic HOD student list -->
+                                <tr>
+                                    <td colspan="5" class="p-4 text-center text-slate-500 italic">No students registered in this department yet.</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -367,8 +375,8 @@
             <div class="bg-neoCyan neo-border-lg p-5 md:p-6 shadow-neo-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
                     <span class="badge-tag bg-white px-2.5 py-1 text-xs font-bold uppercase">Student Academic Hub</span>
-                    <h2 class="font-heading font-black text-2xl md:text-3xl mt-1" id="stu-display-name">ATHARVA PARIT (24UAD002)</h2>
-                    <p class="font-bold text-xs text-black/80" id="stu-display-dept">B.Tech Computer Science & Engineering (AI-DS) • Semester V (2026)</p>
+                    <h2 class="font-heading font-black text-2xl md:text-3xl mt-1" id="stu-display-name">STUDENT NAME</h2>
+                    <p class="font-bold text-xs text-black/80" id="stu-display-dept">B.Tech • Semester V (2026)</p>
                 </div>
                 
                 <div class="flex items-center gap-3">
@@ -382,23 +390,23 @@
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="bg-white p-4 neo-border shadow-neo">
                     <p class="font-bold text-xs uppercase text-slate-600">Overall Attendance</p>
-                    <p class="font-heading font-black text-3xl mt-1 text-neoPurple">88.5%</p>
-                    <span class="badge-tag bg-neoGreen text-[10px] px-2 py-0.5 font-bold uppercase">Good Standing</span>
+                    <p id="stu-kpi-attendance" class="font-heading font-black text-3xl mt-1 text-neoPurple">0.0%</p>
+                    <span class="badge-tag bg-neoGreen text-[10px] px-2 py-0.5 font-bold uppercase">Active Status</span>
                 </div>
                 <div class="bg-white p-4 neo-border shadow-neo">
                     <p class="font-bold text-xs uppercase text-slate-600">Cumulative CGPA</p>
-                    <p class="font-heading font-black text-3xl mt-1 text-blue-600">8.72</p>
-                    <span class="badge-tag bg-neoYellow text-[10px] px-2 py-0.5 font-bold uppercase">Top 10% Class</span>
+                    <p id="stu-kpi-cgpa" class="font-heading font-black text-3xl mt-1 text-blue-600">0.00</p>
+                    <span class="badge-tag bg-neoYellow text-[10px] px-2 py-0.5 font-bold uppercase">Academic Grade</span>
                 </div>
                 <div class="bg-white p-4 neo-border shadow-neo">
                     <p class="font-bold text-xs uppercase text-slate-600">Batch Assignment</p>
-                    <p class="font-heading font-black text-3xl mt-1 text-neoOrange">Batch T1</p>
-                    <span class="badge-tag bg-neoPink text-[10px] px-2 py-0.5 font-bold uppercase">Mentor: Dr. Patil</span>
+                    <p id="stu-kpi-batch" class="font-heading font-black text-3xl mt-1 text-neoOrange">Batch T1</p>
+                    <span id="stu-kpi-mentor" class="badge-tag bg-neoPink text-[10px] px-2 py-0.5 font-bold uppercase">Mentor: Unassigned</span>
                 </div>
                 <div class="bg-white p-4 neo-border shadow-neo">
-                    <p class="font-bold text-xs uppercase text-slate-600">LeetCode Solved</p>
-                    <p class="font-heading font-black text-3xl mt-1 text-neoGreen">42 Qs</p>
-                    <span class="badge-tag bg-white text-[10px] px-2 py-0.5 font-bold uppercase">Verified by Mentor</span>
+                    <p class="font-bold text-xs uppercase text-slate-600">Extracurriculars</p>
+                    <p id="stu-kpi-skills" class="font-heading font-black text-3xl mt-1 text-neoGreen">0</p>
+                    <span class="badge-tag bg-white text-[10px] px-2 py-0.5 font-bold uppercase">Verified Records</span>
                 </div>
             </div>
 
@@ -451,8 +459,8 @@
             <div class="bg-neoPink neo-border-lg p-5 shadow-neo-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
                     <span class="badge-tag bg-white px-2.5 py-1 text-xs font-bold uppercase">Faculty & Batch Mentor Portal</span>
-                    <h2 class="font-heading font-black text-2xl mt-1" id="teacher-profile-name">DR. PATIL (ASSISTANT PROFESSOR)</h2>
-                    <p class="font-bold text-xs" id="teacher-profile-sub">Assigned Subject: Data Structures & Algorithms • Mentor for Batch T1</p>
+                    <h2 class="font-heading font-black text-2xl mt-1" id="teacher-profile-name">FACULTY NAME</h2>
+                    <p class="font-bold text-xs" id="teacher-profile-sub">Assigned Subject: -- • Mentor for Batch --</p>
                 </div>
             </div>
 
@@ -534,9 +542,9 @@
 
         <div class="grid grid-cols-2 gap-4 text-xs font-bold border-b-2 border-black pb-4">
             <div>
-                <p><span class="text-slate-600">STUDENT NAME:</span> <span id="pdf-stu-name">Atharva Parit</span></p>
-                <p><span class="text-slate-600">ROLL NO / PRN:</span> <span id="pdf-stu-roll">24UAD002</span></p>
-                <p><span class="text-slate-600">BRANCH:</span> <span id="pdf-stu-branch">CSE (AI & DS)</span></p>
+                <p><span class="text-slate-600">STUDENT NAME:</span> <span id="pdf-stu-name">--</span></p>
+                <p><span class="text-slate-600">ROLL NO / PRN:</span> <span id="pdf-stu-roll">--</span></p>
+                <p><span class="text-slate-600">BRANCH:</span> <span id="pdf-stu-branch">--</span></p>
             </div>
             <div>
                 <p><span class="text-slate-600">ACADEMIC YEAR:</span> 2026-2027</p>
@@ -570,67 +578,30 @@
 
     <!-- JAVASCRIPT APPLICATION ARCHITECTURE -->
     <script>
-        // System Databases & Dynamic Accounts
+        // Active role & logged in session state
         let currentRole = 'student';
         let loggedInUser = null;
 
+        // Department-wise curriculum subjects
         const DEPT_SUBJECTS = {
             'CSE (AI-DS)': ['Data Structures & Algorithms', 'Database Management Systems', 'Computer Networks', 'Artificial Intelligence Basics'],
             'CSE (AI-ML)': ['Deep Learning & Neural Nets', 'Computer Vision', 'Natural Language Processing', 'Reinforcement Learning']
         };
 
-        // Registered HOD & TPO credentials (Added / Edited via /admin)
-        const SYSTEM_HODS = [
-            { name: 'Prof. T.I. Bagban', email: 'hod.aids@gmail.com', dept: 'CSE (AI-DS)' },
-            { name: 'Dr. V. A. Patil', email: 'hod.aiml@gmail.com', dept: 'CSE (AI-ML)' }
-        ];
+        // SUPER ADMIN CREDENTIALS (ONLY PREDEFINED ACCOUNT)
+        const SUPER_ADMIN = {
+            email: 'admin@edexplus.com',
+            password: 'edexplus@112233',
+            name: 'System Admin'
+        };
 
-        const SYSTEM_TPOS = [
-            { name: 'Prof. K. V. Gurav', email: 'tpo.dkte@gmail.com' }
-        ];
+        // DYNAMIC SYSTEM DATABASES (Initially Empty - Populated via Admin/HOD panels & Signup)
+        const SYSTEM_HODS = [];
+        const SYSTEM_TPOS = [];
+        const SYSTEM_TEACHERS = [];
+        const SYSTEM_STUDENTS = [];
 
-        // Registered Faculty (Created / Edited by HODs)
-        const SYSTEM_TEACHERS = [
-            { name: 'Dr. Patil', email: 'dr.patil@gmail.com', dept: 'CSE (AI-DS)', subject: 'Data Structures & Algorithms', batch: 'T1' },
-            { name: 'Prof. S. R. Mane', email: 'mane.sr@gmail.com', dept: 'CSE (AI-DS)', subject: 'Database Management Systems', batch: 'T2' },
-            { name: 'Dr. A. B. Shinde', email: 'shinde.ab@gmail.com', dept: 'CSE (AI-ML)', subject: 'Deep Learning & Neural Nets', batch: 'T1' }
-        ];
-
-        // Student Roster (AI-DS and AI-ML Students)
-        const SYSTEM_STUDENTS = [
-            {
-                roll: '24UAD002', name: 'Atharva Parit', email: '24uad002@dkte.ac.in', branch: 'CSE (AI-DS)', batch: 'T1', mentor: 'Dr. Patil', attendance: 88.5, cgpa: 8.72,
-                marks: [
-                    { subject: 'Data Structures & Algorithms', se1: 22, se2: 23, see: 44, internal: 45, viva: 46 },
-                    { subject: 'Database Management Systems', se1: 20, se2: 21, see: 42, internal: 42, viva: 44 },
-                    { subject: 'Computer Networks', se1: 18, se2: 19, see: 36, internal: 38, viva: 35 },
-                    { subject: 'Artificial Intelligence Basics', se1: 24, se2: 22, see: 46, internal: 47, viva: 48 }
-                ],
-                skills: ['Solved 42 LeetCode Medium/Easy Questions', 'Cleared Internal Round of SIH 2026']
-            },
-            {
-                roll: '24UAD072', name: 'Chaitanyom Wade', email: '24uad072@dkte.ac.in', branch: 'CSE (AI-DS)', batch: 'T1', mentor: 'Dr. Patil', attendance: 92.0, cgpa: 8.95,
-                marks: [
-                    { subject: 'Data Structures & Algorithms', se1: 24, se2: 24, see: 48, internal: 48, viva: 49 },
-                    { subject: 'Database Management Systems', se1: 23, se2: 22, see: 45, internal: 46, viva: 47 },
-                    { subject: 'Computer Networks', se1: 21, se2: 22, see: 42, internal: 44, viva: 45 },
-                    { subject: 'Artificial Intelligence Basics', se1: 25, se2: 24, see: 49, internal: 49, viva: 50 }
-                ],
-                skills: ['LeetCode 85+ Solved Questions', 'Runner-Up in State Coding Competition']
-            },
-            {
-                roll: '24UAD090', name: 'Rohan Sharma', email: '24uad090@dkte.ac.in', branch: 'CSE (AI-ML)', batch: 'T1', mentor: 'Dr. A. B. Shinde', attendance: 85.0, cgpa: 8.10,
-                marks: [
-                    { subject: 'Deep Learning & Neural Nets', se1: 21, se2: 20, see: 41, internal: 43, viva: 42 },
-                    { subject: 'Computer Vision', se1: 19, se2: 18, see: 38, internal: 40, viva: 41 },
-                    { subject: 'Natural Language Processing', se1: 22, se2: 21, see: 43, internal: 44, viva: 45 },
-                    { subject: 'Reinforcement Learning', se1: 20, se2: 22, see: 42, internal: 42, viva: 43 }
-                ],
-                skills: ['Built PyTorch Image Classification Pipeline']
-            }
-        ];
-
-        // Auth Tab Switching
+        // Role tab switcher in login screen
         function setAuthRole(role) {
             currentRole = role;
             document.querySelectorAll('#btn-tab-student, #btn-tab-teacher, #btn-tab-hod, #btn-tab-tpo, #btn-tab-admin').forEach(btn => {
@@ -638,34 +609,39 @@
             });
 
             const emailInput = document.getElementById('auth-email');
+            const passwordInput = document.getElementById('auth-password');
             const emailHint = document.getElementById('auth-email-hint');
             const labelEmail = document.getElementById('label-email');
+
+            // Clear inputs when switching roles
+            emailInput.value = "";
+            passwordInput.value = "";
 
             if (role === 'student') {
                 document.getElementById('btn-tab-student').className = "neo-btn bg-neoCyan py-2 text-[11px] font-black uppercase";
                 labelEmail.innerText = "Student DKTE Email ID";
-                emailInput.value = "24uad002@dkte.ac.in";
+                emailInput.placeholder = "e.g. 24uad002@dkte.ac.in";
                 emailHint.innerText = "⚠️ Student format: 24UADxxx@dkte.ac.in";
                 emailHint.classList.remove('hidden');
             } else if (role === 'teacher') {
                 document.getElementById('btn-tab-teacher').className = "neo-btn bg-neoPink py-2 text-[11px] font-black uppercase";
-                labelEmail.innerText = "Faculty Email ID (Any Domain, e.g. gmail.com)";
-                emailInput.value = "dr.patil@gmail.com";
+                labelEmail.innerText = "Faculty Email ID";
+                emailInput.placeholder = "Enter Faculty Email";
                 emailHint.classList.add('hidden');
             } else if (role === 'hod') {
                 document.getElementById('btn-tab-hod').className = "neo-btn bg-neoGreen py-2 text-[11px] font-black uppercase";
-                labelEmail.innerText = "HOD Email ID (Any Domain, e.g. gmail.com)";
-                emailInput.value = "hod.aids@gmail.com";
+                labelEmail.innerText = "HOD Email ID";
+                emailInput.placeholder = "Enter HOD Email";
                 emailHint.classList.add('hidden');
             } else if (role === 'tpo') {
                 document.getElementById('btn-tab-tpo').className = "neo-btn bg-neoYellow py-2 text-[11px] font-black uppercase";
-                labelEmail.innerText = "TPO Officer Email ID (Any Domain, e.g. gmail.com)";
-                emailInput.value = "tpo.dkte@gmail.com";
+                labelEmail.innerText = "TPO Officer Email ID";
+                emailInput.placeholder = "Enter TPO Email";
                 emailHint.classList.add('hidden');
             } else if (role === 'admin') {
                 document.getElementById('btn-tab-admin').className = "neo-btn bg-neoOrange py-2 text-[11px] font-black uppercase";
                 labelEmail.innerText = "System Admin Email ID";
-                emailInput.value = "admin@dkte.ac.in";
+                emailInput.placeholder = "admin@edexplus.com";
                 emailHint.classList.add('hidden');
             }
         }
@@ -684,56 +660,61 @@
             }
         }
 
-        // Handle Login Submission & Role Verification Security
+        // Handle Authentication & Role Isolation
         function handleAuthLogin(e) {
             e.preventDefault();
             const email = document.getElementById('auth-email').value.trim().toLowerCase();
+            const password = document.getElementById('auth-password').value;
 
-            // SECURITY GUARDRAIL: Student Email Attempting Faculty/Admin Escalation
+            // SECURITY GUARDRAIL: Prevent students from entering staff portals
             if (email.startsWith('24uad') && currentRole !== 'student') {
-                alert("⛔ ACCESS DENIED! Student emails (24UADxxx@dkte.ac.in) are strictly restricted from Faculty/HOD/Admin panels.");
+                alert("⛔ ACCESS DENIED! Student emails (24UADxxx@dkte.ac.in) are strictly restricted from Admin, HOD, Teacher, and TPO panels.");
                 return;
             }
 
-            if (currentRole === 'student') {
-                const foundStudent = SYSTEM_STUDENTS.find(s => s.email.toLowerCase() === email);
-                if (!foundStudent && !email.startsWith('24uad')) {
-                    alert("⚠️ Invalid Student Credentials. Use format: 24UADxxx@dkte.ac.in");
-                    return;
+            if (currentRole === 'admin') {
+                if (email === SUPER_ADMIN.email && password === SUPER_ADMIN.password) {
+                    loggedInUser = { name: SUPER_ADMIN.name, email: email };
+                    launchPortal('admin');
+                } else {
+                    alert("⛔ Invalid Admin Credentials! Use admin@edexplus.com and edexplus@112233");
                 }
-                loggedInUser = foundStudent || { roll: '24UAD000', name: 'New Student', email: email, branch: 'CSE (AI-DS)', batch: 'T1', mentor: 'Dr. Patil', marks: [], skills: [] };
-                launchPortal('student');
-            } else if (currentRole === 'teacher') {
-                const teacher = SYSTEM_TEACHERS.find(t => t.email.toLowerCase() === email);
-                if (!teacher) {
-                    alert("⛔ Unauthorized Faculty Email! Only HOD-registered faculty can log in here.");
-                    return;
-                }
-                loggedInUser = teacher;
-                launchPortal('teacher');
             } else if (currentRole === 'hod') {
-                const hod = SYSTEM_HODS.find(h => h.email.toLowerCase() === email);
+                const hod = SYSTEM_HODS.find(h => h.email.toLowerCase() === email && h.password === password);
                 if (!hod) {
-                    alert("⛔ Invalid HOD Credentials! Ensure HOD credential is added via Admin Panel.");
+                    alert("⛔ Invalid HOD Credentials! Ensure HOD account is created via System Admin Panel.");
                     return;
                 }
                 loggedInUser = hod;
                 launchPortal('hod');
+            } else if (currentRole === 'teacher') {
+                const teacher = SYSTEM_TEACHERS.find(t => t.email.toLowerCase() === email && t.password === password);
+                if (!teacher) {
+                    alert("⛔ Invalid Teacher Credentials! Ensure Faculty account is created via Department HOD Panel.");
+                    return;
+                }
+                loggedInUser = teacher;
+                launchPortal('teacher');
             } else if (currentRole === 'tpo') {
-                const tpo = SYSTEM_TPOS.find(t => t.email.toLowerCase() === email);
+                const tpo = SYSTEM_TPOS.find(t => t.email.toLowerCase() === email && t.password === password);
                 if (!tpo) {
-                    alert("⛔ Invalid TPO Credentials! Ensure TPO credential is added via Admin Panel.");
+                    alert("⛔ Invalid TPO Credentials! Ensure TPO account is created via System Admin Panel.");
                     return;
                 }
                 loggedInUser = tpo;
                 launchPortal('tpo');
-            } else if (currentRole === 'admin') {
-                if (email === 'admin@dkte.ac.in') {
-                    loggedInUser = { name: 'System Admin', email: email };
-                    launchPortal('admin');
-                } else {
-                    alert("⛔ Invalid System Admin Credentials!");
+            } else if (currentRole === 'student') {
+                if (!email.startsWith('24uad')) {
+                    alert("⚠️ Student Email must follow pattern: 24UADxxx@dkte.ac.in");
+                    return;
                 }
+                const student = SYSTEM_STUDENTS.find(s => s.email.toLowerCase() === email && s.password === password);
+                if (!student) {
+                    alert("⚠️ Student record not found! Please click 'New Student? Sign Up' below to create your account.");
+                    return;
+                }
+                loggedInUser = student;
+                launchPortal('student');
             }
         }
 
@@ -744,19 +725,26 @@
             const roll = document.getElementById('signup-roll').value.trim().toUpperCase();
             const branch = document.getElementById('signup-branch').value;
             const email = document.getElementById('signup-email').value.trim().toLowerCase();
+            const password = document.getElementById('signup-password').value;
 
             if (!email.startsWith('24uad')) {
                 alert("⚠️ Student Email must follow strict pattern: 24UADxxx@dkte.ac.in");
                 return;
             }
 
-            const defaultSubjects = DEPT_SUBJECTS[branch];
+            if (SYSTEM_STUDENTS.some(s => s.email === email || s.roll === roll)) {
+                alert("⚠️ A student with this Roll No or Email already exists!");
+                return;
+            }
+
+            const defaultSubjects = DEPT_SUBJECTS[branch] || [];
             const defaultMarks = defaultSubjects.map(sub => ({ subject: sub, se1: 0, se2: 0, see: 0, internal: 0, viva: 0 }));
 
             const newStudent = {
                 roll: roll,
                 name: name,
                 email: email,
+                password: password,
                 branch: branch,
                 batch: 'T1',
                 mentor: 'Assigned by HOD',
@@ -767,25 +755,32 @@
             };
 
             SYSTEM_STUDENTS.push(newStudent);
-            alert(`✅ Signup Successful! Welcome ${name} to ${branch}. Please Login now.`);
+            alert(`✅ Signup Successful! Welcome ${name} (${roll}) to ${branch}. You can now log in.`);
             toggleSignupMode(false);
+
+            // Auto-fill login email for convenience
+            setAuthRole('student');
+            document.getElementById('auth-email').value = email;
         }
 
-        // ADMIN PANEL: Create or Edit HOD Credentials
+        // ADMIN PANEL: Save (Create or Update) HOD Credentials
         function handleSaveHOD(e) {
             e.preventDefault();
             const index = parseInt(document.getElementById('admin-hod-edit-index').value);
             const name = document.getElementById('admin-hod-name').value.trim();
             const dept = document.getElementById('admin-hod-dept').value;
             const email = document.getElementById('admin-hod-email').value.trim().toLowerCase();
+            const password = document.getElementById('admin-hod-password').value;
 
             if (index >= 0) {
-                // Update Existing HOD
-                SYSTEM_HODS[index] = { name, email, dept };
+                SYSTEM_HODS[index] = { name, email, dept, password };
                 alert(`✅ HOD Credentials updated for ${name}!`);
             } else {
-                // Create New HOD
-                SYSTEM_HODS.push({ name, email, dept });
+                if (SYSTEM_HODS.some(h => h.email === email)) {
+                    alert("⚠️ HOD email already registered!");
+                    return;
+                }
+                SYSTEM_HODS.push({ name, email, dept, password });
                 alert(`✅ New HOD Registered: ${name} (${dept})`);
             }
 
@@ -799,6 +794,7 @@
             document.getElementById('admin-hod-name').value = hod.name;
             document.getElementById('admin-hod-dept').value = hod.dept;
             document.getElementById('admin-hod-email').value = hod.email;
+            document.getElementById('admin-hod-password').value = hod.password;
 
             document.getElementById('admin-hod-form-title').children[0].innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Edit HOD Credential`;
             document.getElementById('btn-submit-hod').innerText = "Update HOD Credential";
@@ -809,6 +805,7 @@
             document.getElementById('admin-hod-edit-index').value = "-1";
             document.getElementById('admin-hod-name').value = '';
             document.getElementById('admin-hod-email').value = '';
+            document.getElementById('admin-hod-password').value = '';
             document.getElementById('admin-hod-form-title').children[0].innerHTML = `<i class="fa-solid fa-user-gear"></i> Create HOD Credential`;
             document.getElementById('btn-submit-hod').innerText = "Register HOD Credential";
             document.getElementById('btn-cancel-hod-edit').classList.add('hidden');
@@ -824,6 +821,10 @@
         function renderAdminHodList() {
             const container = document.getElementById('admin-hod-list');
             if (!container) return;
+            if (SYSTEM_HODS.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 italic">No HODs registered yet.</p>`;
+                return;
+            }
             container.innerHTML = '';
             SYSTEM_HODS.forEach((h, idx) => {
                 container.innerHTML += `
@@ -841,18 +842,23 @@
             });
         }
 
-        // ADMIN PANEL: Create or Edit TPO Credentials
+        // ADMIN PANEL: Save (Create or Update) TPO Credentials
         function handleSaveTPO(e) {
             e.preventDefault();
             const index = parseInt(document.getElementById('admin-tpo-edit-index').value);
             const name = document.getElementById('admin-tpo-name').value.trim();
             const email = document.getElementById('admin-tpo-email').value.trim().toLowerCase();
+            const password = document.getElementById('admin-tpo-password').value;
 
             if (index >= 0) {
-                SYSTEM_TPOS[index] = { name, email };
+                SYSTEM_TPOS[index] = { name, email, password };
                 alert(`✅ TPO Credentials updated for ${name}!`);
             } else {
-                SYSTEM_TPOS.push({ name, email });
+                if (SYSTEM_TPOS.some(t => t.email === email)) {
+                    alert("⚠️ TPO email already registered!");
+                    return;
+                }
+                SYSTEM_TPOS.push({ name, email, password });
                 alert(`✅ New TPO Officer Registered: ${name}`);
             }
 
@@ -865,6 +871,7 @@
             document.getElementById('admin-tpo-edit-index').value = index;
             document.getElementById('admin-tpo-name').value = tpo.name;
             document.getElementById('admin-tpo-email').value = tpo.email;
+            document.getElementById('admin-tpo-password').value = tpo.password;
 
             document.getElementById('admin-tpo-form-title').children[0].innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Edit TPO Credential`;
             document.getElementById('btn-submit-tpo').innerText = "Update TPO Credential";
@@ -875,6 +882,7 @@
             document.getElementById('admin-tpo-edit-index').value = "-1";
             document.getElementById('admin-tpo-name').value = '';
             document.getElementById('admin-tpo-email').value = '';
+            document.getElementById('admin-tpo-password').value = '';
             document.getElementById('admin-tpo-form-title').children[0].innerHTML = `<i class="fa-solid fa-briefcase"></i> Create TPO Credential`;
             document.getElementById('btn-submit-tpo').innerText = "Register TPO Credential";
             document.getElementById('btn-cancel-tpo-edit').classList.add('hidden');
@@ -890,6 +898,10 @@
         function renderAdminTpoList() {
             const container = document.getElementById('admin-tpo-list');
             if (!container) return;
+            if (SYSTEM_TPOS.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 italic">No TPO officers registered yet.</p>`;
+                return;
+            }
             container.innerHTML = '';
             SYSTEM_TPOS.forEach((t, idx) => {
                 container.innerHTML += `
@@ -907,12 +919,13 @@
             });
         }
 
-        // HOD PANEL: Create or Edit Faculty Credentials
+        // HOD PANEL: Save (Create or Edit) Faculty Credentials
         function handleSaveTeacher(e) {
             e.preventDefault();
             const index = parseInt(document.getElementById('hod-teacher-edit-index').value);
             const name = document.getElementById('hod-teacher-name').value.trim();
             const email = document.getElementById('hod-teacher-email').value.trim().toLowerCase();
+            const password = document.getElementById('hod-teacher-password').value;
             const subject = document.getElementById('hod-teacher-subject').value;
             const batch = document.getElementById('hod-teacher-batch').value;
 
@@ -922,11 +935,15 @@
             }
 
             if (index >= 0) {
-                SYSTEM_TEACHERS[index] = { name, email, dept: loggedInUser.dept, subject, batch };
+                SYSTEM_TEACHERS[index] = { name, email, password, dept: loggedInUser.dept, subject, batch };
                 alert(`✅ Faculty credentials updated for ${name}!`);
             } else {
-                SYSTEM_TEACHERS.push({ name, email, dept: loggedInUser.dept, subject, batch });
-                alert(`✅ Faculty Credential Created!\nName: ${name}\nAssigned Subject: ${subject}\nMentor for Batch: ${batch}`);
+                if (SYSTEM_TEACHERS.some(t => t.email === email)) {
+                    alert("⚠️ Teacher email already exists!");
+                    return;
+                }
+                SYSTEM_TEACHERS.push({ name, email, password, dept: loggedInUser.dept, subject, batch });
+                alert(`✅ Faculty Credential Created!\nName: ${name}\nSubject: ${subject}\nMentor Batch: ${batch}`);
             }
 
             cancelTeacherEdit();
@@ -938,6 +955,7 @@
             document.getElementById('hod-teacher-edit-index').value = index;
             document.getElementById('hod-teacher-name').value = teacher.name;
             document.getElementById('hod-teacher-email').value = teacher.email;
+            document.getElementById('hod-teacher-password').value = teacher.password;
             document.getElementById('hod-teacher-subject').value = teacher.subject;
             document.getElementById('hod-teacher-batch').value = teacher.batch;
 
@@ -950,6 +968,7 @@
             document.getElementById('hod-teacher-edit-index').value = "-1";
             document.getElementById('hod-teacher-name').value = '';
             document.getElementById('hod-teacher-email').value = '';
+            document.getElementById('hod-teacher-password').value = '';
             document.getElementById('hod-teacher-form-title').children[0].innerHTML = `<i class="fa-solid fa-chalkboard-user"></i> Create Faculty Credentials`;
             document.getElementById('btn-submit-teacher').innerText = "Register Faculty & Assign";
             document.getElementById('btn-cancel-teacher-edit').classList.add('hidden');
@@ -965,9 +984,14 @@
         function renderHodTeacherList() {
             const container = document.getElementById('hod-teacher-list');
             if (!container || !loggedInUser) return;
-            container.innerHTML = '';
             const deptTeachers = SYSTEM_TEACHERS.filter(t => t.dept === loggedInUser.dept);
 
+            if (deptTeachers.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 italic">No faculty added yet.</p>`;
+                return;
+            }
+
+            container.innerHTML = '';
             deptTeachers.forEach((t) => {
                 const globalIndex = SYSTEM_TEACHERS.findIndex(gt => gt.email === t.email);
                 container.innerHTML += `
@@ -986,7 +1010,7 @@
             });
         }
 
-        // Launch Respective Dashboards
+        // Workspace Launchers
         function launchPortal(role) {
             document.getElementById('section-auth').classList.add('hidden');
             document.getElementById('nav-user-info').classList.remove('hidden');
@@ -1013,10 +1037,10 @@
                 document.getElementById('nav-user-id').innerText = `(${loggedInUser.dept})`;
                 document.getElementById('hod-dept-title').innerText = `HOD DASHBOARD — ${loggedInUser.dept}`;
 
-                // Populate subjects based on HOD department
+                // Dynamic subject dropdown population
                 const subSelect = document.getElementById('hod-teacher-subject');
                 subSelect.innerHTML = '';
-                DEPT_SUBJECTS[loggedInUser.dept].forEach(s => {
+                (DEPT_SUBJECTS[loggedInUser.dept] || []).forEach(s => {
                     subSelect.innerHTML += `<option value="${s}">${s}</option>`;
                 });
 
@@ -1058,14 +1082,22 @@
             document.getElementById('section-student').classList.add('hidden');
             document.getElementById('section-teacher').classList.add('hidden');
             document.getElementById('section-tpo').classList.add('hidden');
+            setAuthRole('student');
         }
 
         // HOD Student Roster Render
         function renderHodStudentRoster() {
             const tbody = document.getElementById('table-hod-students');
+            const badge = document.getElementById('hod-student-count-badge');
             tbody.innerHTML = '';
 
             const deptStudents = SYSTEM_STUDENTS.filter(s => s.branch === loggedInUser.dept);
+            badge.innerText = `Total: ${deptStudents.length} Students`;
+
+            if (deptStudents.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500 italic">No students registered in this department yet.</td></tr>`;
+                return;
+            }
 
             deptStudents.forEach(s => {
                 tbody.innerHTML += `
@@ -1087,25 +1119,35 @@
             const table = document.getElementById('table-student-marks');
             table.innerHTML = '';
 
-            loggedInUser.marks.forEach(m => {
-                const totalPct = Math.round(((m.se1 + m.se2 + m.see + m.internal + m.viva) / 200) * 100);
-                table.innerHTML += `
-                    <tr class="hover:bg-neoYellow/20">
-                        <td class="p-3 border-r-2 border-black font-black">${m.subject}</td>
-                        <td class="p-3 border-r-2 border-black">${m.se1}</td>
-                        <td class="p-3 border-r-2 border-black">${m.se2}</td>
-                        <td class="p-3 border-r-2 border-black">${m.see}</td>
-                        <td class="p-3 border-r-2 border-black">${m.internal}</td>
-                        <td class="p-3 border-r-2 border-black">${m.viva}</td>
-                        <td class="p-3 border-r-2 border-black font-black text-blue-600">${totalPct}%</td>
-                        <td class="p-3"><span class="badge-tag bg-neoGreen px-2 py-0.5 text-[10px] font-bold">Passed</span></td>
-                    </tr>
-                `;
-            });
+            document.getElementById('stu-kpi-attendance').innerText = `${loggedInUser.attendance}%`;
+            document.getElementById('stu-kpi-cgpa').innerText = loggedInUser.cgpa.toFixed(2);
+            document.getElementById('stu-kpi-batch').innerText = loggedInUser.batch || 'Batch T1';
+            document.getElementById('stu-kpi-mentor').innerText = `Mentor: ${loggedInUser.mentor || 'Unassigned'}`;
+            document.getElementById('stu-kpi-skills').innerText = (loggedInUser.skills || []).length;
+
+            if (!loggedInUser.marks || loggedInUser.marks.length === 0) {
+                table.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-500 italic">No marks uploaded by faculty yet.</td></tr>`;
+            } else {
+                loggedInUser.marks.forEach(m => {
+                    const totalPct = Math.round(((m.se1 + m.se2 + m.see + m.internal + m.viva) / 200) * 100);
+                    table.innerHTML += `
+                        <tr class="hover:bg-neoYellow/20">
+                            <td class="p-3 border-r-2 border-black font-black">${m.subject}</td>
+                            <td class="p-3 border-r-2 border-black">${m.se1}</td>
+                            <td class="p-3 border-r-2 border-black">${m.se2}</td>
+                            <td class="p-3 border-r-2 border-black">${m.see}</td>
+                            <td class="p-3 border-r-2 border-black">${m.internal}</td>
+                            <td class="p-3 border-r-2 border-black">${m.viva}</td>
+                            <td class="p-3 border-r-2 border-black font-black text-blue-600">${totalPct}%</td>
+                            <td class="p-3"><span class="badge-tag bg-neoGreen px-2 py-0.5 text-[10px] font-bold">Passed</span></td>
+                        </tr>
+                    `;
+                });
+            }
 
             const skillsList = document.getElementById('student-skills-list');
             skillsList.innerHTML = '';
-            loggedInUser.skills.forEach(s => {
+            (loggedInUser.skills || []).forEach(s => {
                 skillsList.innerHTML += `
                     <div class="p-2 bg-neoYellow/20 neo-border text-xs font-bold flex justify-between items-center">
                         <span><i class="fa-solid fa-check-circle text-neoGreen mr-1.5"></i> ${s}</span>
@@ -1121,6 +1163,11 @@
             tbody.innerHTML = '';
 
             const branchStudents = SYSTEM_STUDENTS.filter(s => s.branch === loggedInUser.dept);
+
+            if (branchStudents.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-500 italic">No students registered in ${loggedInUser.dept} yet.</td></tr>`;
+                return;
+            }
 
             branchStudents.forEach(s => {
                 const m = s.marks[0] || { se1: 0, se2: 0, see: 0, internal: 0, viva: 0 };
@@ -1151,12 +1198,17 @@
             const tbody = document.getElementById('table-tpo-cohort');
             tbody.innerHTML = '';
 
+            if (SYSTEM_STUDENTS.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500 italic">No registered students in placement cohort.</td></tr>`;
+                return;
+            }
+
             SYSTEM_STUDENTS.forEach(s => {
                 tbody.innerHTML += `
                     <tr class="hover:bg-neoGreen/10">
                         <td class="p-2.5 border-r-2 border-black font-black">${s.name} (${s.roll})</td>
                         <td class="p-2.5 border-r-2 border-black font-bold">${s.branch}</td>
-                        <td class="p-2.5 border-r-2 border-black font-mono">${s.cgpa}</td>
+                        <td class="p-2.5 border-r-2 border-black font-mono">${s.cgpa.toFixed(2)}</td>
                         <td class="p-2.5 border-r-2 border-black font-mono">${s.attendance}%</td>
                         <td class="p-2.5 border-r-2 border-black"><span class="badge-tag bg-neoGreen px-2 py-0.5 text-[10px] font-bold">LOW RISK</span></td>
                         <td class="p-2.5 font-bold text-neoGreen">Eligible for Tier-1 Drives</td>
@@ -1167,13 +1219,14 @@
 
         // Monthly PDF Generation
         function downloadStudentMonthlyReport() {
+            if (!loggedInUser) return;
             document.getElementById('pdf-stu-name').innerText = loggedInUser.name;
             document.getElementById('pdf-stu-roll').innerText = loggedInUser.roll;
             document.getElementById('pdf-stu-branch').innerText = loggedInUser.branch;
 
             const pdfMarks = document.getElementById('pdf-table-marks');
             pdfMarks.innerHTML = '';
-            loggedInUser.marks.forEach(m => {
+            (loggedInUser.marks || []).forEach(m => {
                 pdfMarks.innerHTML += `
                     <tr class="border-b border-black">
                         <td class="p-1 border-r border-black font-bold">${m.subject}</td>
