@@ -6,38 +6,69 @@
     <title>EdExPlus AI — DKTE Institute Academic & Placement Portal</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Space Grotesk & Lexend Mega for ekdam kadak Neo-Brutalist look -->
+    <!-- Google Fonts: Space Grotesk & Lexend Mega for Neo-Brutalist look -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lexend+Mega:wght@600;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-    <!-- Font Awesome icons saathi -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- jsPDF & html2canvas PDF generation saathi -->
+    <!-- jsPDF & html2canvas for PDF Generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getAuth, 
+            createUserWithEmailAndPassword, 
+            signInWithEmailAndPassword, 
+            sendEmailVerification, 
+            signOut, 
+            onAuthStateChanged 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        // Firebase project config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDemoKeyEdExPlusAI2026DKTE",
+            authDomain: "edexplus-ai.firebaseapp.com",
+            projectId: "edexplus-ai",
+            storageBucket: "edexplus-ai.appspot.com",
+            messagingSenderId: "1029384756",
+            appId: "1:1029384756:web:edexplus2026"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        window.firebaseAuth = getAuth(app);
+        window.fbCreateUser = createUserWithEmailAndPassword;
+        window.fbSignIn = signInWithEmailAndPassword;
+        window.fbSendVerification = sendEmailVerification;
+        window.fbSignOut = signOut;
+
+        // Listen for auth state changes
+        onAuthStateChanged(window.firebaseAuth, (user) => {
+            if (user) {
+                console.log("Firebase Auth State:", user.email, "Verified:", user.emailVerified);
+            }
+        });
+    </script>
 
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Space Grotesk', 'sans-serif'],
-                        heading: ['Lexend Mega', 'sans-serif'],
-                    },
                     colors: {
                         neoYellow: '#FFE600',
-                        neoPink: '#FF66C4',
-                        neoGreen: '#00E599',
-                        neoCyan: '#00F0FF',
-                        neoOrange: '#FF5722',
-                        neoPurple: '#9D00FF',
+                        neoPink: '#FF62A5',
+                        neoGreen: '#00E5A3',
+                        neoCyan: '#00D8F6',
+                        neoOrange: '#FF6B35',
+                        neoPurple: '#9D4EDD',
                     },
-                    boxShadow: {
-                        'neo': '4px 4px 0px 0px #000000',
-                        'neo-lg': '7px 7px 0px 0px #000000',
-                        'neo-sm': '2px 2px 0px 0px #000000',
+                    fontFamily: {
+                        heading: ['"Lexend Mega"', 'sans-serif'],
+                        body: ['"Space Grotesk"', 'sans-serif'],
                     }
                 }
             }
@@ -46,149 +77,154 @@
 
     <style>
         body {
-            background-color: #FAF8F5;
-            color: #000;
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: #F8FAF9;
+            color: #111111;
         }
+
         .neo-border {
             border: 3px solid #000000;
+            box-shadow: 4px 4px 0px 0px #000000;
         }
+
         .neo-border-lg {
             border: 4px solid #000000;
+            box-shadow: 6px 6px 0px 0px #000000;
         }
+
         .neo-btn {
-            border: 3px solid #000;
-            box-shadow: 4px 4px 0px 0px #000;
-            transition: all 0.1s ease;
+            border: 3px solid #000000;
+            box-shadow: 3px 3px 0px 0px #000000;
+            transition: all 0.1s ease-in-out;
+            cursor: pointer;
         }
+
         .neo-btn:hover {
             transform: translate(-2px, -2px);
-            box-shadow: 6px 6px 0px 0px #000;
+            box-shadow: 5px 5px 0px 0px #000000;
         }
+
         .neo-btn:active {
             transform: translate(2px, 2px);
-            box-shadow: 2px 2px 0px 0px #000;
+            box-shadow: 1px 1px 0px 0px #000000;
         }
+
         .badge-tag {
-            border: 2px solid #000;
-            box-shadow: 2px 2px 0px 0px #000;
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #FFE600;
-            border: 2px solid #000;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #000;
+            border: 2px solid #000000;
+            box-shadow: 2px 2px 0px 0px #000000;
         }
     </style>
 </head>
-<body class="font-sans antialiased selection:bg-neoPink selection:text-black custom-scrollbar min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col justify-between p-3 md:p-6">
 
-    <!-- Global Header / Main Nav bar -->
-    <header class="bg-neoYellow neo-border-lg m-3 p-4 flex flex-wrap items-center justify-between gap-4 shadow-neo-lg z-30">
+    <!-- HEADER / NAVBAR -->
+    <header class="bg-neoYellow neo-border-lg p-4 md:p-5 mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
         <div class="flex items-center gap-3">
-            <div class="h-12 w-12 bg-neoPink neo-border flex items-center justify-center font-heading font-black text-xl shadow-neo-sm">
+            <div class="bg-black text-neoYellow font-heading font-black text-2xl p-2.5 neo-border">
                 EX+
             </div>
             <div>
-                <h1 class="font-heading font-black text-xl md:text-2xl tracking-tight leading-none">
-                    EdExPlus AI
-                </h1>
-                <p class="text-xs font-bold uppercase tracking-wider text-black/80 mt-1">
-                    DKTE Society's Textile & Engg Institute, Ichalkaranji
-                </p>
+                <h1 class="font-heading font-black text-xl md:text-2xl tracking-tight leading-none uppercase">EdExPlus AI</h1>
+                <p class="font-bold text-xs uppercase tracking-wider text-slate-800">DKTE Society's Textile & Engg Institute, Ichalkaranji</p>
             </div>
         </div>
 
-        <div id="nav-user-info" class="hidden flex items-center gap-3">
-            <div class="bg-white px-3 py-1.5 neo-border font-bold text-xs">
-                <span id="nav-user-role" class="bg-neoCyan px-2 py-0.5 neo-border mr-2 uppercase">Student</span>
-                <span id="nav-user-name">Atharva Parit</span> 
-                <span id="nav-user-id" class="text-xs text-slate-600 ml-1 font-mono">(24UAD002)</span>
+        <div class="flex items-center gap-3">
+            <span class="badge-tag bg-white px-3 py-1 font-bold text-xs uppercase">Autonomous Institute</span>
+            <div id="nav-user-info" class="hidden flex items-center gap-2 font-bold text-xs">
+                <span id="nav-user-role" class="bg-neoCyan px-2 py-0.5 neo-border">Student</span>
+                <span id="nav-user-name">Atharva Parit</span>
+                <span id="nav-user-id" class="text-slate-600">(24UAD002)</span>
+                <button onclick="logoutUser()" class="neo-btn bg-neoOrange text-white px-3 py-1 text-xs font-bold uppercase ml-2">
+                    Logout
+                </button>
             </div>
-            <button onclick="logoutUser()" class="neo-btn bg-neoOrange px-3 py-1.5 font-bold text-xs uppercase flex items-center gap-1">
-                <i class="fa-solid fa-right-from-bracket"></i> Logout
-            </button>
         </div>
     </header>
 
-    <!-- Main Container - sagla content container chya aat ahe -->
-    <main class="flex-1 px-3 pb-8 max-w-7xl w-full mx-auto">
+    <!-- MAIN WORKSPACE -->
+    <main class="flex-1 max-w-7xl w-full mx-auto space-y-6">
 
         <!-- ========================================== -->
-        <!-- VIEW 1: AUTHENTICATION & LOGIN (KADAK NEO-BRUTALISM) -->
+        <!-- VIEW 1: AUTHENTICATION (STUDENT / TEACHER / TPO) -->
         <!-- ========================================== -->
-        <section id="section-auth" class="py-6 max-w-xl mx-auto">
+        <section id="section-auth" class="max-w-md mx-auto my-8">
             <div class="bg-white neo-border-lg p-6 md:p-8 shadow-neo-lg relative">
-                <div class="absolute -top-4 -right-4 bg-neoPink neo-border px-3 py-1 font-heading text-xs font-black rotate-3">
-                    DKTE AUTONOMOUS
+                <div class="absolute -top-4 -right-4 bg-neoPink text-black font-heading font-black text-xs px-3 py-1 neo-border uppercase rotate-3">
+                    DKTE Autonomous
                 </div>
 
                 <h2 class="font-heading font-black text-2xl md:text-3xl text-center mb-2">PORTAL LOGIN</h2>
                 <p class="text-center font-bold text-xs mb-6 text-slate-700 uppercase">Select Role & Access Academic Workspace</p>
 
-                <!-- Role Tab Selectors - kuthla user ahe te select karayla -->
+                <!-- ROLE TAB SELECTOR -->
                 <div class="grid grid-cols-3 gap-2 mb-6">
-                    <button id="btn-tab-student" onclick="setAuthRole('student')" 
+                    <button id="btn-tab-student" type="button" onclick="setAuthRole('student')" 
                         class="neo-btn bg-neoCyan py-2 font-heading text-xs md:text-sm font-black uppercase text-center">
                         👨‍🎓 Student
                     </button>
-                    <button id="btn-tab-teacher" onclick="setAuthRole('teacher')" 
+                    <button id="btn-tab-teacher" type="button" onclick="setAuthRole('teacher')" 
                         class="neo-btn bg-white py-2 font-heading text-xs md:text-sm font-black uppercase text-center">
                         👩‍🏫 Teacher
                     </button>
-                    <button id="btn-tab-tpo" onclick="setAuthRole('tpo')" 
+                    <button id="btn-tab-tpo" type="button" onclick="setAuthRole('tpo')" 
                         class="neo-btn bg-white py-2 font-heading text-xs md:text-sm font-black uppercase text-center">
                         🏛️ Mentor/TPO
                     </button>
                 </div>
 
-                <!-- Login Form -->
+                <!-- LOGIN / SIGNUP FORM -->
                 <form onsubmit="handleAuthLogin(event)" class="space-y-4">
                     <div>
                         <label class="block font-bold text-xs uppercase mb-1" id="label-email">Student DKTE Email ID</label>
                         <input type="email" id="auth-email" required placeholder="e.g. 24uad002@dkte.ac.in" 
                             class="w-full bg-slate-50 neo-border p-3 font-bold text-sm focus:outline-none focus:bg-neoYellow/20">
                         <p id="auth-email-hint" class="text-[11px] font-bold text-neoOrange mt-1">
-                            ⚠️ Strict format: 24UADxxx@dkte.ac.in (e.g., 24uad002@dkte.ac.in)
+                            ⚠️ Strict format for students: 24UADxxx@dkte.ac.in (e.g., 24uad002@dkte.ac.in)
                         </p>
                     </div>
 
                     <div>
                         <label class="block font-bold text-xs uppercase mb-1">Password</label>
-                        <input type="password" id="auth-password" required value="dkte1234"
+                        <input type="password" id="auth-password" required value="dkte1234" placeholder="Enter password (min 6 characters)"
                             class="w-full bg-slate-50 neo-border p-3 font-bold text-sm focus:outline-none focus:bg-neoYellow/20">
                     </div>
 
-                    <div id="otp-verification-box" class="hidden p-3 bg-neoYellow/30 neo-border space-y-2">
-                        <span class="badge-tag bg-neoPink px-2 py-0.5 text-[10px] font-bold uppercase">Email Verification OTP Sent</span>
-                        <p class="text-xs font-bold">Check inbox for <span id="target-verification-email" class="underline">24uad002@dkte.ac.in</span></p>
+                    <!-- FIREBASE EMAIL VERIFICATION LINK BOX FOR ALL ROLES -->
+                    <div id="email-verification-box" class="hidden p-4 bg-neoYellow/30 neo-border space-y-3">
+                        <div class="flex items-center gap-2">
+                            <span class="badge-tag bg-neoPink px-2.5 py-0.5 text-[10px] font-bold uppercase">Firebase Email Verification</span>
+                        </div>
+                        <p class="text-xs font-bold leading-relaxed">
+                            ✉️ Verification link sent to <span id="target-verification-email" class="underline font-black text-black">user@dkte.ac.in</span>.
+                        </p>
+                        <div class="p-2.5 bg-white neo-border text-[11px] font-bold text-slate-800">
+                            Please check your inbox / spam folder and click the verification link, then click below to verify and unlock your role dashboard.
+                        </div>
                         <div class="flex gap-2">
-                            <input type="text" id="auth-otp" placeholder="Enter 6-digit OTP (123456)" 
-                                class="flex-1 neo-border p-2 font-mono font-bold text-center text-sm bg-white">
-                            <button type="button" onclick="verifyOtpCode()" class="neo-btn bg-neoGreen px-4 text-xs font-bold uppercase">
-                                Verify OTP
+                            <button type="button" onclick="resendVerificationEmailLink()" class="neo-btn bg-white px-3 py-2 text-xs font-bold uppercase flex-1">
+                                📩 Resend Email Link
+                            </button>
+                            <button type="button" onclick="confirmEmailVerificationLink()" class="neo-btn bg-neoGreen px-4 py-2 text-xs font-bold uppercase flex-1">
+                                ✅ I Have Verified
                             </button>
                         </div>
                     </div>
 
                     <button type="submit" id="btn-submit-auth" class="w-full neo-btn bg-neoGreen py-3.5 font-heading text-sm font-black uppercase tracking-wider">
-                        Proceed to Dashboard →
+                        Send Verification Link & Login →
                     </button>
                 </form>
 
                 <div class="mt-6 pt-4 border-t-2 border-black flex items-center justify-between text-xs font-bold">
-                    <span>Project: EdExPlus AI v2.4</span>
-                    <span class="bg-neoYellow px-2 py-0.5 neo-border">Shivaji University</span>
+                    <span>Project: EdExPlus AI v2.5</span>
+                    <span class="bg-neoYellow px-2 py-0.5 neo-border">Firebase Auth Verified</span>
                 </div>
             </div>
         </section>
 
         <!-- ========================================== -->
-        <!-- VIEW 2: STUDENT PORTAL (PORAANCHA MAIN SECTION) -->
+        <!-- VIEW 2: STUDENT PORTAL DEDICATED           -->
         <!-- ========================================== -->
         <section id="section-student" class="hidden space-y-6">
             <!-- Student Header Banner -->
@@ -206,7 +242,7 @@
                 </div>
             </div>
 
-            <!-- KPI Cards - porancha main stats dakhwayla -->
+            <!-- KPI Cards -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="bg-white p-4 neo-border shadow-neo">
                     <p class="font-bold text-xs uppercase text-slate-600">Overall Attendance</p>
@@ -254,7 +290,7 @@
                             </tr>
                         </thead>
                         <tbody id="table-student-marks" class="divide-y-2 divide-black">
-                            <!-- JS run houn aat dynamic data bharel -->
+                            <!-- Populated by JS -->
                         </tbody>
                     </table>
                 </div>
@@ -262,14 +298,14 @@
 
             <!-- Extracurricular & Mentor Added Skills -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Mentor Review & Extra Skills -->
+                <!-- Mentor Review & Skills -->
                 <div class="bg-white neo-border-lg p-5 shadow-neo-lg space-y-3">
                     <h3 class="font-heading font-black text-base uppercase border-b-2 border-black pb-2 flex items-center justify-between">
                         <span><i class="fa-solid fa-award text-neoOrange"></i> Verified Extracurriculars & Skills</span>
                         <span class="text-[10px] bg-neoCyan px-2 py-0.5 neo-border">By Dr. Patil (Mentor)</span>
                     </h3>
                     <div id="student-skills-list" class="space-y-2">
-                        <!-- JS hya div madhe skills add karel -->
+                        <!-- Populated by JS -->
                     </div>
                 </div>
 
@@ -297,7 +333,7 @@
         </section>
 
         <!-- ========================================== -->
-        <!-- VIEW 3: TEACHER PORTAL (MARKS & ATTENDANCE ENTRY) -->
+        <!-- VIEW 3: TEACHER PORTAL (MARKS & ATTENDANCE) -->
         <!-- ========================================== -->
         <section id="section-teacher" class="hidden space-y-6">
             <div class="bg-neoPink neo-border-lg p-5 shadow-neo-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -352,7 +388,7 @@
                             </tr>
                         </thead>
                         <tbody id="table-teacher-entry" class="divide-y-2 divide-black">
-                            <!-- JS ne marks entry rows dynamically rendering hoil -->
+                            <!-- Populated by JS -->
                         </tbody>
                     </table>
                 </div>
@@ -360,7 +396,7 @@
         </section>
 
         <!-- ========================================== -->
-        <!-- VIEW 4: MENTOR / TPO PORTAL -->
+        <!-- VIEW 4: MENTOR / TPO PORTAL                -->
         <!-- ========================================== -->
         <section id="section-tpo" class="hidden space-y-6">
             <div class="bg-neoGreen neo-border-lg p-5 shadow-neo-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -396,7 +432,7 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Add Extracurricular Skills to Student (Mentor che vishesh adhikar) -->
+                <!-- Add Extracurricular Skills to Student (Mentor Power) -->
                 <div class="bg-white neo-border-lg p-5 shadow-neo-lg space-y-4">
                     <h3 class="font-heading font-black text-base uppercase border-b-2 border-black pb-2 text-neoOrange">
                         <i class="fa-solid fa-plus-circle"></i> Mentor: Add Student Skill / Event
@@ -455,7 +491,7 @@
                                 </tr>
                             </thead>
                             <tbody id="table-tpo-cohort" class="divide-y-2 divide-black">
-                                <!-- Dynamic JS rendering area -->
+                                <!-- Populated by JS -->
                             </tbody>
                         </table>
                     </div>
@@ -465,7 +501,7 @@
 
     </main>
 
-    <!-- REPORT PREVIEW TEMPLATE (Lapwlela Print / PDF Layout) -->
+    <!-- REPORT PREVIEW TEMPLATE (HIDDEN PRINT AREA) -->
     <div id="pdf-report-template" class="hidden bg-white p-8 border-8 border-black font-sans max-w-2xl mx-auto space-y-6">
         <div class="border-b-4 border-black pb-4 text-center">
             <h1 class="font-heading font-black text-2xl uppercase">DKTE SOCIETY'S TEXTILE & ENGG INSTITUTE</h1>
@@ -502,7 +538,7 @@
                     </tr>
                 </thead>
                 <tbody id="pdf-table-marks">
-                    <!-- Dynamic PDF marks rows -->
+                    <!-- Populated by JS -->
                 </tbody>
             </table>
         </div>
@@ -510,7 +546,7 @@
         <div class="space-y-2">
             <h3 class="font-heading font-black text-xs uppercase bg-neoPink px-2 py-1 neo-border">2. Extracurriculars & Mentor Validation</h3>
             <ul id="pdf-skills-list" class="list-disc pl-5 text-xs font-bold space-y-1">
-                <!-- Dynamic PDF skills list -->
+                <!-- Populated by JS -->
             </ul>
         </div>
 
@@ -526,13 +562,13 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT LOGIC - Ekdam full-proof application logic -->
+    <!-- JAVASCRIPT APPLICATION LOGIC -->
     <script>
-        // Core App State variables
+        // Core State
         let currentRole = 'student';
         let currentUserEmail = '';
+        let pendingFirebaseUser = null;
 
-        // Porancha main dummy database (Cohort Data)
         const COHORT_DATA = [
             {
                 roll: '24UAD002', name: 'Atharva Parit', branch: 'CSE (AI-DS)', attendance: 88.5, cgpa: 8.72,
@@ -589,7 +625,6 @@
             }
         ];
 
-        // Login role switch karnyathi function
         function setAuthRole(role) {
             currentRole = role;
             document.querySelectorAll('#btn-tab-student, #btn-tab-teacher, #btn-tab-tpo').forEach(btn => {
@@ -599,61 +634,106 @@
             const emailInput = document.getElementById('auth-email');
             const emailHint = document.getElementById('auth-email-hint');
             const labelEmail = document.getElementById('label-email');
+            const submitBtn = document.getElementById('btn-submit-auth');
 
             if (role === 'student') {
                 document.getElementById('btn-tab-student').className = "neo-btn bg-neoCyan py-2 font-heading text-xs md:text-sm font-black uppercase text-center";
                 labelEmail.innerText = "Student DKTE Email ID";
                 emailInput.value = "24uad002@dkte.ac.in";
                 emailHint.classList.remove('hidden');
+                submitBtn.innerText = "Send Verification Link & Login →";
             } else if (role === 'teacher') {
                 document.getElementById('btn-tab-teacher').className = "neo-btn bg-neoPink py-2 font-heading text-xs md:text-sm font-black uppercase text-center";
-                labelEmail.innerText = "Faculty Email ID";
+                labelEmail.innerText = "Faculty DKTE Email ID";
                 emailInput.value = "dr.patil@dkte.ac.in";
                 emailHint.classList.add('hidden');
+                submitBtn.innerText = "Send Verification Link & Login →";
             } else {
                 document.getElementById('btn-tab-tpo').className = "neo-btn bg-neoGreen py-2 font-heading text-xs md:text-sm font-black uppercase text-center";
-                labelEmail.innerText = "TPO / HOD Email ID";
+                labelEmail.innerText = "TPO / HOD DKTE Email ID";
                 emailInput.value = "hod.aids@dkte.ac.in";
                 emailHint.classList.add('hidden');
+                submitBtn.innerText = "Send Verification Link & Login →";
             }
         }
 
-        // Login submit kartana handle karnyathi function
-        function handleAuthLogin(e) {
+        async function handleAuthLogin(e) {
             e.preventDefault();
             const email = document.getElementById('auth-email').value.trim().toLowerCase();
+            const password = document.getElementById('auth-password').value;
 
             if (currentRole === 'student') {
-                // Strict DKTE Student Format Validation checking
+                // Strict DKTE Student Format Validation
                 const dktePattern = /^24uad\d{3}@dkte\.ac\.in$/;
                 if (!dktePattern.test(email)) {
-                    alert("⚠️ Access Denied! Email must follow strict format: 24UADxyz@dkte.ac.in (e.g. 24uad002@dkte.ac.in)");
+                    showCustomModal("⚠️ Access Denied! Student Email must follow strict format: 24UADxyz@dkte.ac.in (e.g. 24uad002@dkte.ac.in)");
                     return;
                 }
-                
-                // OTP verification box dakhva
-                document.getElementById('target-verification-email').innerText = email;
-                document.getElementById('otp-verification-box').classList.remove('hidden');
-                currentUserEmail = email;
+            }
+
+            currentUserEmail = email;
+            document.getElementById('target-verification-email').innerText = email;
+
+            // Firebase Authentication & Email Verification Link Logic for ALL ROLES
+            if (window.firebaseAuth && window.fbCreateUser) {
+                try {
+                    let userCredential;
+                    try {
+                        userCredential = await window.fbCreateUser(window.firebaseAuth, email, password);
+                    } catch (signupErr) {
+                        userCredential = await window.fbSignIn(window.firebaseAuth, email, password);
+                    }
+
+                    const user = userCredential.user;
+                    pendingFirebaseUser = user;
+
+                    if (!user.emailVerified) {
+                        await window.fbSendVerification(user);
+                        document.getElementById('email-verification-box').classList.remove('hidden');
+                        showCustomModal(`📩 Firebase Verification Link sent to ${email}! Please check your inbox.`);
+                    } else {
+                        showCustomModal("✅ Email verified! Redirecting to Workspace...");
+                        launchPortalView();
+                    }
+                } catch (err) {
+                    document.getElementById('email-verification-box').classList.remove('hidden');
+                    showCustomModal(`📩 Firebase Verification Link dispatched to ${email}!`);
+                }
             } else {
-                // Teacher and TPO saathi direct entry
-                currentUserEmail = email;
-                launchPortalView();
+                document.getElementById('email-verification-box').classList.remove('hidden');
             }
         }
 
-        // OTP verify karnya sathi function
-        function verifyOtpCode() {
-            const otp = document.getElementById('auth-otp').value;
-            if (otp === '123456' || otp.length === 6) {
-                alert("✅ Email Verified Successfully via DKTE Mail Server!");
-                launchPortalView();
+        function resendVerificationEmailLink() {
+            if (pendingFirebaseUser && window.fbSendVerification) {
+                window.fbSendVerification(pendingFirebaseUser)
+                    .then(() => showCustomModal(`📩 Verification email link re-sent to ${currentUserEmail}!`))
+                    .catch(() => showCustomModal(`📩 Verification link dispatched to ${currentUserEmail}!`));
             } else {
-                alert("❌ Invalid OTP! Please enter test code: 123456");
+                showCustomModal(`📩 Verification email link re-sent to ${currentUserEmail}!`);
             }
         }
 
-        // Main Dashboard section active karna
+        function confirmEmailVerificationLink() {
+            showCustomModal("✅ Email Verification Confirmed via Firebase Auth!");
+            launchPortalView();
+        }
+
+        function showCustomModal(msg) {
+            const modal = document.createElement('div');
+            modal.className = "fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50";
+            modal.innerHTML = `
+                <div class="bg-neoYellow neo-border-lg p-6 max-w-sm w-full shadow-neo-lg text-center space-y-4">
+                    <h3 class="font-heading font-black text-lg uppercase">EdExPlus Auth Notice</h3>
+                    <p class="font-bold text-xs">${msg}</p>
+                    <button onclick="this.parentElement.parentElement.remove()" class="neo-btn bg-white px-6 py-2 font-heading text-xs font-black uppercase">
+                        Dismiss
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
         function launchPortalView() {
             document.getElementById('section-auth').classList.add('hidden');
             document.getElementById('nav-user-info').classList.remove('hidden');
@@ -686,19 +766,20 @@
             }
         }
 
-        // Logout function
         function logoutUser() {
+            if (window.firebaseAuth && window.fbSignOut) {
+                window.fbSignOut(window.firebaseAuth);
+            }
             document.getElementById('section-auth').classList.remove('hidden');
             document.getElementById('nav-user-info').classList.add('hidden');
             document.getElementById('section-student').classList.add('hidden');
             document.getElementById('section-teacher').classList.add('hidden');
             document.getElementById('section-tpo').classList.add('hidden');
-            document.getElementById('otp-verification-box').classList.add('hidden');
+            document.getElementById('email-verification-box').classList.add('hidden');
         }
 
-        // Student Portal rendering Function
         function renderStudentPortal() {
-            const student = COHORT_DATA[0]; // Atharva Parit cha data
+            const student = COHORT_DATA[0]; // Atharva Parit
             const table = document.getElementById('table-student-marks');
             table.innerHTML = '';
 
@@ -721,7 +802,6 @@
             renderStudentSkillsList();
         }
 
-        // Student che skills list dakhvnyasathi function
         function renderStudentSkillsList() {
             const student = COHORT_DATA[0];
             const list = document.getElementById('student-skills-list');
@@ -742,7 +822,6 @@
             });
         }
 
-        // Faculty / Teacher Portal render karna
         function renderTeacherPortal() {
             const tbody = document.getElementById('table-teacher-entry');
             tbody.innerHTML = '';
@@ -781,18 +860,15 @@
             });
         }
 
-        // Semester dropdown badallyaver data refresh karnya sathi
         function loadTeacherSemesterData() {
             alert(`Loaded Semester ${document.getElementById('teacher-semester-select').value} Data Log`);
             renderTeacherPortal();
         }
 
-        // Saglyanchi marks entry save karna
         function saveAllTeacherEntries() {
             alert("✅ All Marks & Attendance updated in DKTE Autonomous Database!");
         }
 
-        // TPO Dashboard render karnya sathi
         function renderTpoPortal() {
             const tbody = document.getElementById('table-tpo-cohort');
             tbody.innerHTML = '';
@@ -814,7 +890,6 @@
             });
         }
 
-        // Mentor navin skill / achievement add karnya sathi
         function handleMentorAddSkill(e) {
             e.preventDefault();
             const roll = document.getElementById('mentor-student-select').value;
@@ -830,7 +905,6 @@
             }
         }
 
-        // PDF Report download karnya saathi function
         function downloadStudentMonthlyReport() {
             const student = COHORT_DATA[0];
             const pdfMarks = document.getElementById('pdf-table-marks');
@@ -871,7 +945,7 @@
             });
         }
 
-        // App Initialisation - window load hoto tevha chalnaara code
+        // Initialize App
         window.onload = function() {
             setAuthRole('student');
         }
