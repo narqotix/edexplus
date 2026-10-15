@@ -139,7 +139,20 @@
                             class="w-full bg-slate-50 neo-border p-3 font-bold text-sm focus:outline-none focus:bg-neoYellow/20">
                     </div>
 
-                    <button type="submit" class="w-full neo-btn bg-neoGreen py-3.5 font-heading text-sm font-black uppercase tracking-wider">
+                    <!-- OTP Verification Box for Student Login -->
+                    <div id="otp-verification-box" class="hidden p-3 bg-neoYellow/30 neo-border space-y-2">
+                        <span class="badge-tag bg-neoPink px-2 py-0.5 text-[10px] font-bold uppercase">Email Verification Code Sent</span>
+                        <p class="text-xs font-bold">Verification OTP sent to <span id="target-verification-email" class="underline">student@dkte.ac.in</span></p>
+                        <div class="flex gap-2">
+                            <input type="text" id="auth-otp" placeholder="Enter 6-digit OTP" 
+                                class="flex-1 neo-border p-2 font-mono font-bold text-center text-sm bg-white">
+                            <button type="button" onclick="verifyStudentOtpCode()" class="neo-btn bg-neoGreen px-4 text-xs font-bold uppercase">
+                                Verify & Access
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="btn-login-submit" class="w-full neo-btn bg-neoGreen py-3.5 font-heading text-sm font-black uppercase tracking-wider">
                         Proceed to Workspace →
                     </button>
 
@@ -175,8 +188,22 @@
                         <label class="block font-bold text-xs uppercase mb-1">Password</label>
                         <input type="password" id="signup-password" required placeholder="Set Password" class="w-full bg-slate-50 neo-border p-2.5 font-bold text-sm">
                     </div>
-                    <button type="submit" class="w-full neo-btn bg-neoCyan py-3 font-heading text-xs font-black uppercase">
-                        Complete Student Signup
+
+                    <!-- OTP Box for Signup -->
+                    <div id="signup-otp-verification-box" class="hidden p-3 bg-neoYellow/30 neo-border space-y-2">
+                        <span class="badge-tag bg-neoPink px-2 py-0.5 text-[10px] font-bold uppercase">Email Verification Code Sent</span>
+                        <p class="text-xs font-bold">Verification OTP sent to <span id="signup-target-verification-email" class="underline">student@dkte.ac.in</span></p>
+                        <div class="flex gap-2">
+                            <input type="text" id="signup-auth-otp" placeholder="Enter 6-digit OTP" 
+                                class="flex-1 neo-border p-2 font-mono font-bold text-center text-sm bg-white">
+                            <button type="button" onclick="verifySignupOtpCode()" class="neo-btn bg-neoGreen px-4 text-xs font-bold uppercase">
+                                Verify OTP
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="btn-signup-submit" class="w-full neo-btn bg-neoCyan py-3 font-heading text-xs font-black uppercase">
+                        Request Verification Code
                     </button>
                     <div class="text-center pt-1">
                         <button type="button" onclick="toggleSignupMode(false)" class="text-xs font-bold underline">
@@ -582,6 +609,9 @@
         // Global Application State Variables
         let currentRole = 'student';
         let loggedInUser = null;
+        let pendingOtpCode = null;
+        let pendingUserToLogin = null;
+        let pendingSignupData = null;
 
         // Persistent Dynamic DBs initialized from localStorage
         let DEPT_SUBJECTS = dbGet('dept_subjects', {
@@ -613,7 +643,6 @@
             dbSet('teachers', SYSTEM_TEACHERS);
             dbSet('students', SYSTEM_STUDENTS);
 
-            // Also update active session state if user is logged in
             if (loggedInUser && currentRole) {
                 dbSet('session', { role: currentRole, user: loggedInUser });
             }
@@ -632,6 +661,8 @@
 
             emailInput.value = '';
             document.getElementById('auth-password').value = '';
+            document.getElementById('otp-verification-box').classList.add('hidden');
+            document.getElementById('btn-login-submit').classList.remove('hidden');
 
             if (role === 'student') {
                 document.getElementById('btn-tab-student').className = "neo-btn bg-neoCyan py-2 text-[11px] font-black uppercase";
@@ -671,7 +702,7 @@
             }
         }
 
-        // Handle Login Submission & Session Persistence
+        // Handle Login Submission & Verification OTP
         function handleAuthLogin(e) {
             e.preventDefault();
             const email = document.getElementById('auth-email').value.trim().toLowerCase();
@@ -723,13 +754,33 @@
                     alert("⛔ Student not found! Please complete Student Sign Up first.");
                     return;
                 }
-                loggedInUser = student;
-                dbSet('session', { role: 'student', user: loggedInUser });
-                launchPortal('student');
+                
+                // Trigger Simulated Email OTP Verification for Student
+                pendingOtpCode = Math.floor(100000 + Math.random() * 900000).toString();
+                pendingUserToLogin = student;
+
+                document.getElementById('target-verification-email').innerText = email;
+                document.getElementById('otp-verification-box').classList.remove('hidden');
+                document.getElementById('btn-login-submit').classList.add('hidden');
+                
+                alert(`📧 Verification email sent to ${email}!\n\n[SIMULATED INBOX]: Your OTP Code is: ${pendingOtpCode}`);
             }
         }
 
-        // Student Self Signup
+        function verifyStudentOtpCode() {
+            const enteredOtp = document.getElementById('auth-otp').value.trim();
+            if (enteredOtp === pendingOtpCode && pendingUserToLogin) {
+                loggedInUser = pendingUserToLogin;
+                dbSet('session', { role: 'student', user: loggedInUser });
+                pendingOtpCode = null;
+                pendingUserToLogin = null;
+                launchPortal('student');
+            } else {
+                alert("⛔ Invalid Verification Code! Please check and try again.");
+            }
+        }
+
+        // Student Self Signup with Email OTP Verification
         function handleStudentSignup(e) {
             e.preventDefault();
             const name = document.getElementById('signup-name').value.trim();
@@ -743,10 +794,15 @@
                 return;
             }
 
+            if (SYSTEM_STUDENTS.some(s => s.email === email || s.roll === roll)) {
+                alert("⚠️ Student with this Roll PRN or Email already exists!");
+                return;
+            }
+
             const defaultSubjects = DEPT_SUBJECTS[branch] || [];
             const defaultMarks = defaultSubjects.map(sub => ({ subject: sub.name, se1: 0, se2: 0, see: 0, internal: 0, viva: 0 }));
 
-            const newStudent = {
+            pendingSignupData = {
                 roll: roll,
                 name: name,
                 email: email,
@@ -759,201 +815,31 @@
                 skills: ['Registered in Semester V (2026)']
             };
 
-            SYSTEM_STUDENTS.push(newStudent);
-            syncDB();
-            alert(`✅ Signup Successful! Welcome ${name}. Please Login now.`);
-            toggleSignupMode(false);
+            pendingOtpCode = Math.floor(100000 + Math.random() * 900000).toString();
+            document.getElementById('signup-target-verification-email').innerText = email;
+            document.getElementById('signup-otp-verification-box').classList.remove('hidden');
+            document.getElementById('btn-signup-submit').classList.add('hidden');
+
+            alert(`📧 Verification code sent to ${email}!\n\n[SIMULATED INBOX]: Your OTP Code is: ${pendingOtpCode}`);
         }
 
-        // Admin Save/Edit HOD & TPO
-        function handleSaveHOD(e) {
-            e.preventDefault();
-            const index = parseInt(document.getElementById('admin-hod-index').value);
-            const name = document.getElementById('admin-hod-name').value.trim();
-            const dept = document.getElementById('admin-hod-dept').value;
-            const email = document.getElementById('admin-hod-email').value.trim().toLowerCase();
-            const password = document.getElementById('admin-hod-password').value;
-
-            if (index === -1) {
-                SYSTEM_HODS.push({ name, dept, email, password });
-                alert(`✅ HOD Credential created for ${name}!`);
-            } else {
-                SYSTEM_HODS[index] = { name, dept, email, password };
-                alert(`✅ HOD Credential updated for ${name}!`);
-            }
-
-            syncDB();
-            resetAdminHodForm();
-            renderAdminHodTable();
-        }
-
-        function resetAdminHodForm() {
-            document.getElementById('admin-hod-index').value = '-1';
-            document.getElementById('admin-hod-name').value = '';
-            document.getElementById('admin-hod-email').value = '';
-            document.getElementById('admin-hod-password').value = '';
-            document.getElementById('btn-save-hod').innerText = 'Register HOD Credential';
-        }
-
-        function editHod(index) {
-            const h = SYSTEM_HODS[index];
-            document.getElementById('admin-hod-index').value = index;
-            document.getElementById('admin-hod-name').value = h.name;
-            document.getElementById('admin-hod-dept').value = h.dept;
-            document.getElementById('admin-hod-email').value = h.email;
-            document.getElementById('admin-hod-password').value = h.password;
-            document.getElementById('btn-save-hod').innerText = 'Update HOD Credential';
-        }
-
-        function deleteHod(index) {
-            if (confirm("Are you sure you want to delete this HOD credential?")) {
-                SYSTEM_HODS.splice(index, 1);
+        function verifySignupOtpCode() {
+            const enteredOtp = document.getElementById('signup-auth-otp').value.trim();
+            if (enteredOtp === pendingOtpCode && pendingSignupData) {
+                SYSTEM_STUDENTS.push(pendingSignupData);
                 syncDB();
-                renderAdminHodTable();
-            }
-        }
-
-        function renderAdminHodTable() {
-            const tbody = document.getElementById('table-admin-hods');
-            if (!tbody) return;
-            tbody.innerHTML = '';
-            SYSTEM_HODS.forEach((h, idx) => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="p-1.5 border-r border-black">${h.name}</td>
-                        <td class="p-1.5 border-r border-black">${h.dept}</td>
-                        <td class="p-1.5 border-r border-black">${h.email}</td>
-                        <td class="p-1.5 space-x-1">
-                            <button onclick="editHod(${idx})" class="neo-btn bg-neoCyan px-1.5 py-0.5 text-[10px]">Edit</button>
-                            <button onclick="deleteHod(${idx})" class="neo-btn bg-neoOrange text-white px-1.5 py-0.5 text-[10px]">Del</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        function handleSaveTPO(e) {
-            e.preventDefault();
-            const index = parseInt(document.getElementById('admin-tpo-index').value);
-            const name = document.getElementById('admin-tpo-name').value.trim();
-            const email = document.getElementById('admin-tpo-email').value.trim().toLowerCase();
-            const password = document.getElementById('admin-tpo-password').value;
-
-            if (index === -1) {
-                SYSTEM_TPOS.push({ name, email, password });
-                alert(`✅ TPO Credential created for ${name}!`);
+                alert(`✅ Email Verified & Signup Successful! Welcome ${pendingSignupData.name}. Please Login now.`);
+                pendingSignupData = null;
+                pendingOtpCode = null;
+                document.getElementById('signup-otp-verification-box').classList.add('hidden');
+                document.getElementById('btn-signup-submit').classList.remove('hidden');
+                toggleSignupMode(false);
             } else {
-                SYSTEM_TPOS[index] = { name, email, password };
-                alert(`✅ TPO Credential updated for ${name}!`);
-            }
-
-            syncDB();
-            resetAdminTpoForm();
-            renderAdminTpoTable();
-        }
-
-        function resetAdminTpoForm() {
-            document.getElementById('admin-tpo-index').value = '-1';
-            document.getElementById('admin-tpo-name').value = '';
-            document.getElementById('admin-tpo-email').value = '';
-            document.getElementById('admin-tpo-password').value = '';
-            document.getElementById('btn-save-tpo').innerText = 'Register TPO Credential';
-        }
-
-        function editTpo(index) {
-            const t = SYSTEM_TPOS[index];
-            document.getElementById('admin-tpo-index').value = index;
-            document.getElementById('admin-tpo-name').value = t.name;
-            document.getElementById('admin-tpo-email').value = t.email;
-            document.getElementById('admin-tpo-password').value = t.password;
-            document.getElementById('btn-save-tpo').innerText = 'Update TPO Credential';
-        }
-
-        function deleteTpo(index) {
-            if (confirm("Are you sure you want to delete this TPO credential?")) {
-                SYSTEM_TPOS.splice(index, 1);
-                syncDB();
-                renderAdminTpoTable();
+                alert("⛔ Invalid Verification Code! Verification failed.");
             }
         }
 
-        function renderAdminTpoTable() {
-            const tbody = document.getElementById('table-admin-tpos');
-            if (!tbody) return;
-            tbody.innerHTML = '';
-            SYSTEM_TPOS.forEach((t, idx) => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="p-1.5 border-r border-black">${t.name}</td>
-                        <td class="p-1.5 border-r border-black">${t.email}</td>
-                        <td class="p-1.5 space-x-1">
-                            <button onclick="editTpo(${idx})" class="neo-btn bg-neoCyan px-1.5 py-0.5 text-[10px]">Edit</button>
-                            <button onclick="deleteTpo(${idx})" class="neo-btn bg-neoOrange text-white px-1.5 py-0.5 text-[10px]">Del</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        // HOD Subject & Faculty Management
-        function handleAddDepartmentSubject(e) {
-            e.preventDefault();
-            const subName = document.getElementById('hod-subject-name').value.trim();
-            const subType = document.getElementById('hod-subject-type').value;
-
-            if (!DEPT_SUBJECTS[loggedInUser.dept]) {
-                DEPT_SUBJECTS[loggedInUser.dept] = [];
-            }
-
-            DEPT_SUBJECTS[loggedInUser.dept].push({ name: subName, type: subType });
-            syncDB();
-            
-            // INSTANT SYNC: Immediately update student marks lists for this branch
-            SYSTEM_STUDENTS.forEach(s => {
-                if (s.branch === loggedInUser.dept) {
-                    if (!s.marks.find(m => m.subject === subName)) {
-                        s.marks.push({ subject: subName, se1: 0, se2: 0, see: 0, internal: 0, viva: 0 });
-                    }
-                }
-            });
-            syncDB();
-
-            alert(`✅ Subject "${subName}" (${subType}) added instantly to ${loggedInUser.dept}!`);
-
-            document.getElementById('hod-subject-name').value = '';
-            populateHodSubjectDropdown();
-        }
-
-        function populateHodSubjectDropdown() {
-            const subSelect = document.getElementById('hod-teacher-subject');
-            if (!subSelect) return;
-            subSelect.innerHTML = '';
-            const subjects = DEPT_SUBJECTS[loggedInUser.dept] || [];
-
-            subjects.forEach(s => {
-                subSelect.innerHTML += `<option value="${s.name}" data-type="${s.type}">${s.name} (${s.type})</option>`;
-            });
-
-            handleHodSubjectSelectionChange();
-        }
-
-        function handleHodSubjectSelectionChange() {
-            const subSelect = document.getElementById('hod-teacher-subject');
-            if (!subSelect || !subSelect.options.length) return;
-
-            const selectedOption = subSelect.options[subSelect.selectedIndex];
-            const subType = selectedOption.getAttribute('data-type');
-            const batchWrapper = document.getElementById('hod-batch-selection-wrapper');
-
-            if (batchWrapper) {
-                if (subType === 'Theory') {
-                    batchWrapper.style.display = 'none';
-                } else {
-                    batchWrapper.style.display = 'block';
-                }
-            }
-        }
-
+        // HOD Teacher Creation & Course Management
         function handleHodSaveTeacher(e) {
             e.preventDefault();
             const index = parseInt(document.getElementById('hod-teacher-index').value);
@@ -977,10 +863,18 @@
                 if (!teacher.assignments) {
                     teacher.assignments = [{ subject: teacher.subject, batch: teacher.batch, type: subObj ? subObj.type : 'Theory' }];
                 }
+
+                // GUARD: Check if subject is already assigned to this faculty
+                const isDuplicate = teacher.assignments.some(a => a.subject === subName && a.batch === batch);
+                if (isDuplicate) {
+                    alert(`⚠️ Course "${subName}" (${batch}) is ALREADY assigned to ${name}! Cannot assign duplicate course.`);
+                    return;
+                }
+
                 teacher.assignments.push({ subject: subName, batch: batch, type: subObj ? subObj.type : 'Theory' });
                 teacher.name = name;
                 teacher.password = password;
-                alert(`✅ Additional course "${subName}" assigned to ${name}!`);
+                alert(`✅ Additional course "${subName}" (${batch}) assigned to ${name}!`);
             } else {
                 SYSTEM_TEACHERS.push({
                     name,
@@ -999,28 +893,24 @@
             renderHodTeacherTable();
         }
 
-        function resetHodTeacherForm() {
-            document.getElementById('hod-teacher-index').value = '-1';
-            document.getElementById('hod-teacher-name').value = '';
-            document.getElementById('hod-teacher-email').value = '';
-            document.getElementById('hod-teacher-password').value = '';
-            document.getElementById('btn-save-teacher').innerText = 'Register / Update Faculty';
-        }
+        // Delete specific assigned course from faculty
+        function deleteFacultyCourse(teacherEmail, courseIndex) {
+            const teacher = SYSTEM_TEACHERS.find(t => t.email === teacherEmail);
+            if (!teacher || !teacher.assignments) return;
 
-        function editTeacher(index) {
-            const t = SYSTEM_TEACHERS[index];
-            document.getElementById('hod-teacher-index').value = index;
-            document.getElementById('hod-teacher-name').value = t.name;
-            document.getElementById('hod-teacher-email').value = t.email;
-            document.getElementById('hod-teacher-password').value = t.password;
-            document.getElementById('btn-save-teacher').innerText = 'Update Faculty Credentials';
-        }
+            if (teacher.assignments.length <= 1) {
+                alert("⚠️ Faculty must have at least one course assigned. Delete faculty entry if removing entirely.");
+                return;
+            }
 
-        function deleteTeacher(index) {
-            if (confirm("Are you sure you want to remove this faculty?")) {
-                SYSTEM_TEACHERS.splice(index, 1);
+            const removedCourse = teacher.assignments[courseIndex];
+            if (confirm(`Are you sure you want to remove course "${removedCourse.subject}" from ${teacher.name}?`)) {
+                teacher.assignments.splice(courseIndex, 1);
+                teacher.subject = teacher.assignments[0].subject;
+                teacher.batch = teacher.assignments[0].batch;
                 syncDB();
                 renderHodTeacherTable();
+                alert(`✅ Course "${removedCourse.subject}" deleted from ${teacher.name}.`);
             }
         }
 
@@ -1031,12 +921,20 @@
             const deptTeachers = SYSTEM_TEACHERS.filter(t => t.dept === loggedInUser.dept);
 
             deptTeachers.forEach((t, idx) => {
-                const courseList = t.assignments ? t.assignments.map(a => `${a.subject} (${a.batch})`).join(', ') : `${t.subject} (${t.batch})`;
+                const assignments = t.assignments || [{ subject: t.subject, batch: t.batch }];
+                
+                let courseTags = assignments.map((a, courseIdx) => `
+                    <span class="inline-flex items-center gap-1 bg-neoYellow px-1.5 py-0.5 neo-border text-[10px] my-0.5">
+                        ${a.subject} (${a.batch})
+                        <button onclick="deleteFacultyCourse('${t.email}', ${courseIdx})" title="Delete Course" class="text-neoRed hover:font-black">✕</button>
+                    </span>
+                `).join(' ');
+
                 tbody.innerHTML += `
                     <tr>
                         <td class="p-2 border-r-2 border-black font-black">${t.name}</td>
                         <td class="p-2 border-r-2 border-black">${t.email}</td>
-                        <td class="p-2 border-r-2 border-black">${courseList}</td>
+                        <td class="p-2 border-r-2 border-black">${courseTags}</td>
                         <td class="p-2 space-x-1">
                             <button onclick="editTeacher(${idx})" class="neo-btn bg-neoCyan px-1.5 py-0.5 text-[10px]">Edit</button>
                             <button onclick="deleteTeacher(${idx})" class="neo-btn bg-neoOrange text-white px-1.5 py-0.5 text-[10px]">Del</button>
